@@ -15,13 +15,13 @@
   function update(){
     $("turnLabel").textContent=state.phase==="battle"?"INVASION IN PROGRESS":state.phase==="finished"?"BATTLE COMPLETE":state.turn.toUpperCase()+" KING'S DEPLOYMENT";
     $("turnDot").className="turn-dot "+state.turn;
-    $("toolLabel").textContent=state.phase==="battle"?"Select a soldier, then click a destination":classNames[state.selectedClass]+" · "+state.counts[state.turn]+" troops";
+    $("toolLabel").textContent=state.phase==="battle"?"Armies fight automatically":classNames[state.selectedClass]+" · "+state.counts[state.turn]+" troops";
     $("redStatus").textContent=(state.deployed.red?state.counts.red+" troops deployed":"Awaiting deployment")+" · "+(state.classes.red||"soldier").toUpperCase();
     $("blueStatus").textContent=(state.deployed.blue?state.counts.blue+" troops deployed":"Awaiting deployment")+" · "+(state.classes.blue||"soldier").toUpperCase();
     $("redHealth").style.width=state.health.red+"%";$("blueHealth").style.width=state.health.blue+"%";
     $("roundNumber").textContent=String(state.round).padStart(2,"0");$("dayNumber").textContent=String(state.round).padStart(2,"0");
     $("phaseLabel").textContent=state.phase==="battle"?"THE KINGDOMS ARE AT WAR":state.turn.toUpperCase()+" DEPLOYMENT";
-    $("arenaCaption").textContent=state.phase==="battle"?"CLICK A SOLDIER · CLICK A TARGET OR DESTINATION":"DEPLOY YOUR TROOPS INSIDE YOUR KINGDOM";
+    $("arenaCaption").textContent=state.phase==="battle"?"AUTOMATIC BATTLE · SELECT A SOLDIER ONLY TO GIVE OPTIONAL ORDERS":"DEPLOY YOUR TROOPS INSIDE YOUR KINGDOM";
     $("deployBtn").disabled=state.phase==="battle"||state.deployed[state.turn];
     $("advanceBtn").disabled=state.phase==="battle"||!state.deployed[state.turn];
     $("advanceBtn").querySelector("span").textContent=state.turn==="red"?"END RED DEPLOYMENT":"BEGIN THE INVASION";
@@ -37,11 +37,11 @@
     if(state.phase==="battle"||state.deployed[state.turn])return;
     state.counts[state.turn]=state.selectedCount;state.classes[state.turn]=state.selectedClass;state.deployed[state.turn]=true;
     window.Crown3D?.deployArmy(state.turn,state.selectedCount,state.selectedClass);
-    tone(320,.14);announce(state.turn.toUpperCase()+" KINGDOM: "+state.selectedCount+" "+state.selectedClass.toUpperCase()+" TROOPS DEPLOYED. CLICK A SOLDIER TO SELECT IT, THEN CLICK A POSITION.");
+    tone(320,.14);announce(state.turn.toUpperCase()+" KINGDOM: "+state.selectedCount+" "+state.selectedClass.toUpperCase()+" TROOPS DEPLOYED.");
     update();
   });
   $("advanceBtn").addEventListener("click",()=>{
-    if(state.phase==="red"&&state.deployed.red){state.turn="blue";state.selectedClass="soldier";$("troopCount").value="10";state.selectedCount=10;window.Crown3D?.setActiveSide("blue");announce("BLUE KING: DEPLOY YOUR ARMY IN THE AZURE TERRITORY.");update();}
+    if(state.phase==="red"&&state.deployed.red){state.phase="blue";state.turn="blue";state.selectedClass="soldier";$("troopCount").value="10";state.selectedCount=10;window.Crown3D?.setActiveSide("blue");announce("BLUE KING: DEPLOY YOUR ARMY IN THE AZURE TERRITORY.");update();}
     else if(state.phase==="blue"&&state.deployed.blue){startBattle();}
   });
   function startBattle(){
@@ -67,6 +67,17 @@
   };
   $("undoBtn").addEventListener("click",()=>{if(state.phase!=="battle"){window.Crown3D?.removeArmy(state.turn);state.deployed[state.turn]=false;announce(state.turn.toUpperCase()+" DEPLOYMENT WITHDRAWN.");update();}});
   $("beginBtn").addEventListener("click",()=>{$("intro").classList.add("hidden");$("gameShell").classList.remove("hidden");window.Crown3D?.setActiveSide("red");update();});
+  $("quickBattleBtn").addEventListener("click",()=>{
+    $("intro").classList.add("hidden");$("gameShell").classList.remove("hidden");
+    Object.assign(state,{turn:"red",phase:"battle",counts:{red:10,blue:10},deployed:{red:true,blue:true},classes:{red:"soldier",blue:"soldier"},selectedCount:10,selectedClass:"soldier",health:{red:100,blue:100}});
+    $("troopCount").value="10";
+    window.Crown3D?.resetArmies();
+    window.Crown3D?.deployArmy("red",10,"soldier");
+    window.Crown3D?.deployArmy("blue",10,"soldier");
+    window.Crown3D?.beginBattle();
+    announce("QUICK BATTLE: BOTH ARMIES ARE MARCHING AUTOMATICALLY.");
+    tone(120,.35);update();
+  });
   $("resetBtn").addEventListener("click",reset);
   $("playAgain").addEventListener("click",()=>{$("resultOverlay").classList.add("hidden");reset();});
   $("howBtn").addEventListener("click",()=>$("modal").classList.remove("hidden"));
