@@ -19,7 +19,6 @@ Play the live game: **[Crown & Chaos on Render](https://crown-and-chaos.onrender
 - Four stylized 3D hero classes: shield-bearing Soldier, bow-wielding Archer, mounted Knight, and arcane Mage
 - Alternating Red and Blue command phases
 - Animated 3D character movement, signature ability effects, siege-impact particles, damaged and collapsing strongholds, combat damage, health bars, and victory screen
-- Three deliberate orders per kingdom per round, with alternating command phases
 - Restrained red impact sparks and dust (non-graphic; no gore)
 - Synthesized sound effects with a mute toggle
 - Responsive layout and reduced-motion accessibility support
@@ -38,11 +37,12 @@ Visit http://localhost:8000.
 ## How to play
 
 1. Click **Enter the Battle**.
-2. Red chooses a unit and draws a route on the left half of the arena (up to three commands).
-3. Click **End Red Turn** and pass the device to Blue.
-4. Blue draws routes on the right half (up to three commands).
-5. Click **Unleash Battle** to resolve both armies' commands.
-6. Survive the clash and repeat until one kingdom's health reaches zero.
+2. Choose 10, 50, or 100 soldiers and select a troop class.
+3. Click **Deploy Army**. Troops form ranks automatically inside your kingdom.
+4. Click an individual soldier, then click a destination or enemy target. Soldiers can cross into the opposing kingdom.
+5. Click **End Red Deployment** and deploy the Azure army.
+6. Click **Begin the Invasion**. Both armies advance, engage nearby enemies, and besiege the opposing stronghold.
+7. Destroy the enemy castle to win.
 
 ### Unit strengths
 
@@ -53,7 +53,7 @@ Visit http://localhost:8000.
 | Knight | 21 | Heavy assault |
 | Mage | 18 | Arcane strike |
 
-Each hero triggers a signature power when deployed. Damage includes a small random battle modifier. Longer routes earn a small tactical bonus.
+Troop classes have different movement speeds and battlefield silhouettes. Soldiers automatically seek nearby enemies during combat and attack the opposing castle when they reach its walls.
 
 ## Project structure
 
