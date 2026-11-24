@@ -22,7 +22,7 @@
     <section class="intro" id="intro">
       <div class="eyebrow"><span></span> A KINGDOM WILL FALL <span></span></div>
       <h1>THE LAST<br><em>THRONE</em></h1>
-      <p class="intro-copy">Two kingdoms. One living battlefield. Four elite war classes.<br>Hold formation. Break the enemy siege. Bring down their crown.</p>
+      <p class="intro-copy">Two kingdoms. Living armies. 10, 50, or 100 soldiers.<br>Deploy your formation. Command by clicking. Invade and destroy the enemy stronghold.</p>
       <button class="primary-btn" id="beginBtn"><span>ENTER THE BATTLE</span><b>↗</b></button>
       <div class="intro-foot"><span>✦</span> NO DESTINY. ONLY STRATEGY. <span>✦</span></div>
     </section>
@@ -44,30 +44,30 @@
           <div class="castle castle-red"><div class="flag">♛</div><div class="castle-body"></div></div>
           <div class="castle castle-blue"><div class="flag">♚</div><div class="castle-body"></div></div>
           <div class="battle-line"></div>
-          <canvas id="battleCanvas" aria-label="Draw your army's route on your half of the battlefield"></canvas>
-          <div class="arena-caption" id="arenaCaption">RED KING — DRAW ON THE LEFT SIDE</div>
+          <canvas id="battleCanvas" aria-hidden="true"></canvas>
+          <div class="arena-caption" id="arenaCaption">DEPLOY YOUR TROOPS INSIDE YOUR KINGDOM</div>
           <div class="combat-flash" id="combatFlash"></div>
         </div>
-        <div class="arena-bottom"><span>DRAW CONTROLLED ROUTES · KEEP YOUR LINES</span><span>3 ORDERS PER KING · DISCIPLINE WINS SIEGES</span></div>
+        <div class="arena-bottom"><span>CLICK A SOLDIER · CLICK A DESTINATION</span><span>INVADE · ENGAGE · BESIEGE</span></div>
       </div>
       <div class="command-panel">
-        <div class="turn-info"><span class="turn-dot red" id="turnDot"></span><div><small id="turnLabel">RED KING'S TURN</small><strong id="toolLabel">Choose your formation</strong></div></div>
+        <div class="turn-info"><span class="turn-dot red" id="turnDot"></span><div><small id="turnLabel">RED KING'S DEPLOYMENT</small><strong id="toolLabel">Choose your army size</strong></div></div>
         <div class="tools" role="group" aria-label="Choose unit">
           <button class="tool active" data-tool="soldier" aria-pressed="true"><span>⚔</span><small>SOLDIER</small><em>SHIELD GUARD</em></button>
           <button class="tool" data-tool="archer" aria-pressed="false"><span>➶</span><small>ARCHER</small><em>ARROW VOLLEY</em></button>
           <button class="tool" data-tool="knight" aria-pressed="false"><span>♞</span><small>KNIGHT</small><em>IRON CHARGE</em></button>
           <button class="tool" data-tool="mage" aria-pressed="false"><span>✧</span><small>MAGE</small><em>METEOR</em></button>
         </div>
-        <div class="command-actions"><button class="text-btn" id="undoBtn">↶ UNDO</button><button class="primary-btn fight-btn" id="advanceBtn"><span>END RED TURN</span><b>↗</b></button></div>
+        <div class="command-actions"><label class="troop-picker" for="troopCount">ARMY SIZE <select id="troopCount"><option value="10">10 SOLDIERS</option><option value="50">50 SOLDIERS</option><option value="100">100 SOLDIERS</option></select></label><button class="text-btn" id="deployBtn">DEPLOY ARMY</button><button class="text-btn" id="undoBtn">↶ WITHDRAW</button><button class="primary-btn fight-btn" id="advanceBtn"><span>END RED DEPLOYMENT</span><b>↗</b></button></div>
       </div>
-      <div class="game-footer"><button class="text-btn" id="resetBtn">↻ RESTART GAME</button><span>THE CROWN IS EARNED, NEVER GIVEN.</span><button class="text-btn" id="howBtn">HOW TO PLAY ?</button></div>
+      <div class="battle-notice" id="battleNotice" role="status" aria-live="polite">Choose 10, 50, or 100 troops and deploy your first formation.</div><div class="game-footer"><button class="text-btn" id="resetBtn">↻ RESTART GAME</button><span>THE CROWN IS EARNED, NEVER GIVEN.</span><button class="text-btn" id="howBtn">HOW TO PLAY ?</button></div>
     </section>
   </main>
 
   <div class="modal hidden" id="modal" role="dialog" aria-modal="true" aria-labelledby="manualTitle">
     <div class="modal-card"><button class="close-modal" id="closeModal" aria-label="Close">×</button><div class="eyebrow small">FIELD MANUAL</div><h2 id="manualTitle">HOW TO <em>CONQUER</em></h2>
-      <ol><li><b>Red commands first:</b> choose a 3D hero and draw a route on the left half.</li><li>Press <b>END RED TURN</b> and pass the device to Blue.</li><li>Blue draws up to three routes on the right half.</li><li>Press <b>UNLEASH BATTLE</b> to watch both armies clash.</li><li>Repeat rounds until one king's health reaches zero.</li></ol>
-      <p class="hint">WAR DISCIPLINE: issue deliberate orders and protect your lines. SOLDIER: Shield Guard reduces the next hit. ARCHER: Arrow Volley adds ranged damage. KNIGHT: Iron Charge delivers a heavy mounted strike. MAGE: Meteor crashes down with arcane force. Hits create restrained red impact sparks and dust; a defeated kingdom's castle visibly collapses.</p><button class="primary-btn" id="gotIt"><span>UNDERSTOOD</span><b>↗</b></button>
+      <ol><li>Choose an army size: <b>10, 50, or 100 soldiers</b>, then select a troop class.</li><li>Deploy your army. Soldiers automatically form ranks inside your kingdom.</li><li>Click a soldier, then click any battlefield position. You can cross the centre line and enter enemy territory.</li><li>Blue deploys its army in the Azure territory. Click <b>BEGIN THE INVASION</b>.</li><li>Both armies advance, engage nearby enemies, and attack the opposing stronghold. Destroy the enemy castle to win.</li></ol>
+      <p class="hint">BATTLEFIELD COMMAND: select an individual soldier and click a destination. Troops can enter either kingdom. During battle, units seek nearby enemies, fight in formation, and besiege the enemy castle. Soldier, Archer, Knight, and Mage formations have different movement speeds. A stronghold reaching zero integrity collapses and ends the battle.</p><button class="primary-btn" id="gotIt"><span>UNDERSTOOD</span><b>↗</b></button>
     </div>
   </div>
   <div class="result-overlay hidden" id="resultOverlay"><div class="result-card"><div class="eyebrow">THE DUST HAS SETTLED</div><div class="crown">♛</div><h2 id="resultTitle">VICTORY</h2><p id="resultText">The kingdom remembers your name.</p><button class="primary-btn" id="playAgain"><span>FIGHT AGAIN</span><b>↻</b></button></div></div>
