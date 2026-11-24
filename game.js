@@ -40,7 +40,7 @@
   $("aiDifficulty").addEventListener("change",e=>{state.difficulty=e.target.value;window.Crown2D?.setDifficulty(state.difficulty);update();});
   $("deployBtn").addEventListener("click",()=>{
     if(state.phase==="battle"||state.deployed[state.turn])return;
-    state.selectedCount=Number($("troopCount").value)||state.selectedCount;state.counts[state.turn]=state.selectedCount;state.classes[state.turn]=state.selectedClass;state.deployed[state.turn]=true;
+    const requestedCount=Number($("troopCount").value);if(!Number.isSafeInteger(requestedCount)||requestedCount<1){announce("Enter a positive whole-number troop count before deploying.");return;}state.selectedCount=requestedCount;state.counts[state.turn]=state.selectedCount;state.classes[state.turn]=state.selectedClass;state.deployed[state.turn]=true;
     window.Crown3D?.deployArmy(state.turn,state.selectedCount,state.selectedClass);
     tone(320,.14);announce(state.turn.toUpperCase()+" KINGDOM: "+state.selectedCount+" "+state.selectedClass.toUpperCase()+" TROOPS DEPLOYED.");
     update();
