@@ -466,7 +466,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
         const distance=unit.position.distanceTo(target.position);
         const reach=d.kind==="archer"?1.55:d.kind==="mage"?1.8:.48;
         if(distance>reach){moveToward(unit,target.position,delta,time);}
-        else if(time>d.attackAt){target.userData.hp-=d.kind==="knight"?2:d.kind==="mage"?1.5:1;d.attackAt=time+(d.kind==="archer"?.95:d.kind==="knight"?1.05:1.1);if(target.userData.hp<=0){target.traverse(obj=>{const pickIndex=pickables.indexOf(obj);if(pickIndex>=0)pickables.splice(pickIndex,1);});scene.remove(target);target.userData.hp=0;}}
+        else if(time>d.attackAt){target.userData.hp-=d.kind==="knight"?2:d.kind==="mage"?1.5:1;d.attackAt=time+(d.kind==="archer" ? 0.95 : d.kind==="knight" ? 1.05 : 1.1);if(target.userData.hp<=0){target.traverse(obj=>{const pickIndex=pickables.indexOf(obj);if(pickIndex>=0)pickables.splice(pickIndex,1);});scene.remove(target);target.userData.hp=0;}}
         continue;
       }
       if(d.destination){const distance=unit.position.distanceTo(d.destination);if(distance>.14)moveToward(unit,d.destination,delta,time);else d.destination=null;}
@@ -476,7 +476,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
         const distance=unit.position.distanceTo(approach);
         if(distance>1.35)moveToward(unit,approach,delta,time);
         else if(time>d.attackAt){
-          const siegeDamage=d.kind==="knight"?.22:d.kind==="mage"?.18:d.kind==="archer"?.14:.12;
+          const siegeDamage=d.kind==="knight" ? 0.22 : d.kind==="mage" ? 0.18 : d.kind==="archer" ? 0.14 : 0.12;
           d.attackAt=time+1.2;castleIntegrity[enemySide]=Math.max(0,castleIntegrity[enemySide]-siegeDamage);
           window.CrownGame?.onCastleDamage?.(enemySide,siegeDamage,castleIntegrity[enemySide]);
           siegeImpact(enemySide,castleIntegrity[enemySide],siegeDamage);
