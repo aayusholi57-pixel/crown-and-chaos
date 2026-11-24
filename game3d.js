@@ -494,19 +494,21 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     battleUnits.forEach(u=>{u.userData.destination=null;u.userData.target=null;});
   }
   function updateTroopAI(delta,time){
+    const targetLoad=new Map();
+    for(const unit of battleUnits){const target=unit.userData.target;if(unit.userData.hp>0&&target&&target.userData.hp>0)targetLoad.set(target,(targetLoad.get(target)||0)+1);}
     for(const unit of battleUnits){
       const d=unit.userData;if(d.hp<=0)continue;d.walking=false;
       let target=d.target;
       if(!target||target.userData.hp<=0){
-        d.target=null;let nearest=null,nearestDist=1.45;
-        for(const enemy of battleUnits){if(enemy.userData.side===d.side||enemy.userData.hp<=0)continue;const dist=unit.position.distanceTo(enemy.position);if(dist<nearestDist){nearest=enemy;nearestDist=dist;}}
-        if(nearest){target=nearest;d.target=nearest;d.destination=null;}
+        d.target=null;let nearest=null,bestScore=2.5;
+        for(const enemy of battleUnits){if(enemy.userData.side===d.side||enemy.userData.hp<=0)continue;const dist=unit.position.distanceTo(enemy.position);const score=dist+(targetLoad.get(enemy)||0)*.52;if(score<bestScore){nearest=enemy;bestScore=score;}}
+        if(nearest){target=nearest;d.target=nearest;targetLoad.set(nearest,(targetLoad.get(nearest)||0)+1);d.destination=null;}
       }
       if(target&&target.userData.hp>0){
         const distance=unit.position.distanceTo(target.position);
         const reach=d.kind==="archer"?1.55:d.kind==="mage"?1.8:.48;
         if(distance>reach){moveToward(unit,target.position,delta,time);}
-        else if(time>d.attackAt){target.userData.hp-=d.kind==="knight"?2:d.kind==="mage"?1.5:1;d.attackStarted=time;if(d.kind==="archer"||d.kind==="mage")spawnCombatProjectile(unit,target);d.attackAt=time+(d.kind==="archer" ? 0.95 : d.kind==="knight" ? 1.05 : 1.1);if(target.userData.hp<=0){target.traverse(obj=>{const pickIndex=pickables.indexOf(obj);if(pickIndex>=0)pickables.splice(pickIndex,1);});scene.remove(target);target.userData.hp=0;}}
+        else if(time>d.attackAt){target.userData.hp-=d.kind==="knight"?2:d.kind==="mage"?1.5:1;d.attackStarted=time;if(d.kind==="archer"||d.kind==="mage")spawnCombatProjectile(unit,target);d.attackAt=time+(d.kind==="archer" ? 0.95 : d.kind==="knight" ? 1.05 : 1.1);if(target.userData.hp<=0)defeatTroop(target,time);}
         continue;
       }
       if(d.destination){const distance=unit.position.distanceTo(d.destination);if(distance>.14)moveToward(unit,d.destination,delta,time);else d.destination=null;}
@@ -523,6 +525,10 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
         }
       }
     }
+  }
+  function defeatTroop(unit,time){
+    const d=unit.userData;if(d.dying)return;d.hp=0;d.dying=true;d.deathAt=time;
+    unit.traverse(obj=>{const index=pickables.indexOf(obj);if(index>=0)pickables.splice(index,1);});
   }
   function spawnCombatProjectile(unit,target){
     const isMage=unit.userData.kind==="mage";
@@ -568,8 +574,10 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     }
     updateTroopAI(delta,t);
     animateCombatProjectiles(t);
-    for(const unit of battleUnits){
-      const d=unit.userData;if(d.hp<=0)continue;
+    for(let i=battleUnits.length-1;i>=0;i--){
+      const unit=battleUnits[i],d=unit.userData;
+      if(d.dying){const fallen=Math.min(1,(t-d.deathAt)/.68);unit.rotation.z=(d.side==="red"?1:-1)*fallen*1.28;unit.position.y=-.12*fallen;unit.scale.setScalar(Math.max(.001,1-fallen));if(fallen>=1){scene.remove(unit);battleUnits.splice(i,1);}continue;}
+      if(d.hp<=0)continue;
       const walk=Math.sin(t*10+d.phase);
       const attackProgress=(t-d.attackStarted)/.38;
       const attacking=attackProgress>=0&&attackProgress<=1;
