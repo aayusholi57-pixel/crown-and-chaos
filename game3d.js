@@ -427,6 +427,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
       if(selectedUnit&&selectedUnit!==clicked&&selectedUnit.userData.side!==clicked.userData.side){
         selectedUnit.userData.target=clicked;selectedUnit.userData.destination=null;
         if(!battleStarted){selectTroop(clicked);return;}
+        return;
       }else{selectTroop(clicked);return;}
     }
     if(selectedUnit){
@@ -493,7 +494,8 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
   }
   const clock = new THREE.Clock();
   function render() {
-    const t = clock.getElapsedTime();
+    const delta = Math.min(clock.getDelta(), .05);
+    const t = clock.elapsedTime;
     for (const group of units.values()) {
       const d = group.userData;
       if (d && !active.has(group)) {
@@ -501,7 +503,6 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
         group.rotation.z = Math.sin(t * 1.4 + group.position.x) * .018;
       }
     }
-    const delta=Math.min(clock.getDelta(),.05);
     updateTroopAI(delta,t);
     renderer.render(scene, camera);
     requestAnimationFrame(render);
