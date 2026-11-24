@@ -351,6 +351,137 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     scene.remove(pulse);
   }
 
+
+  // Individual battlefield troops use shared low-poly geometry for large armies.
+  const troopGeometry = {
+    body:new THREE.CapsuleGeometry(.17,.38,2,5),
+    head:new THREE.SphereGeometry(.115,7,6),
+    shield:new THREE.BoxGeometry(.2,.28,.07),
+    spear:new THREE.CylinderGeometry(.018,.018,.58,5),
+    base:new THREE.CylinderGeometry(.2,.23,.045,8)
+  };
+  const troopMaterials = {
+    red: new THREE.MeshStandardMaterial({color:0x9f3339,roughness:.62}),
+    blue: new THREE.MeshStandardMaterial({color:0x315b9a,roughness:.62}),
+    steel:new THREE.MeshStandardMaterial({color:0xb7b8b2,metalness:.65,roughness:.35}),
+    skin:new THREE.MeshStandardMaterial({color:0xd5aa83}),
+    baseRed:new THREE.MeshStandardMaterial({color:0x5d292b}),
+    baseBlue:new THREE.MeshStandardMaterial({color:0x233f69})
+  };
+  const battleUnits=[];
+  const pickables=[];
+  const raycaster=new THREE.Raycaster();
+  const pointer=new THREE.Vector2();
+  const groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+  let selectedUnit=null, activeSide="red", battleStarted=false;
+  const castleIntegrity={red:100,blue:100};
+  function makeTroop(side,kind,index,count){
+    const group=new THREE.Group();
+    const armor=troopMaterials[side], baseMat=side==="red"?troopMaterials.baseRed:troopMaterials.baseBlue;
+    const base=new THREE.Mesh(troopGeometry.base,baseMat);base.position.y=.035;group.add(base);
+    const body=new THREE.Mesh(troopGeometry.body,armor);body.position.y=.38;group.add(body);
+    const head=new THREE.Mesh(troopGeometry.head,troopMaterials.skin);head.position.y=.73;group.add(head);
+    const shield=new THREE.Mesh(troopGeometry.shield,armor);shield.position.set(-.19,.4,.04);group.add(shield);
+    const spear=new THREE.Mesh(troopGeometry.spear,troopMaterials.steel);spear.position.set(.2,.48,0);spear.rotation.z=-.12;group.add(spear);
+    const cols=Math.ceil(Math.sqrt(count)),row=Math.floor(index/cols),col=index%cols;
+    const direction=side==="red"?1:-1;
+    const startX=side==="red"?-5.9:-1.55;
+    group.position.set(startX+direction*col*.38,0,(row-(Math.ceil(count/cols)-1)/2)*.38);
+    group.rotation.y=side==="red"?Math.PI/2:-Math.PI/2;
+    group.userData={side,kind,hp:3,selected:false,destination:null,target:null,attackAt:0,phase:index*.23,walking:false};
+    group.traverse(obj=>{if(obj.isMesh){obj.userData.troop=group;pickables.push(obj);obj.castShadow=true;}});
+    scene.add(group);battleUnits.push(group);return group;
+  }
+  function deployArmy(side,count,kind){
+    removeArmy(side);for(let i=0;i<count;i++)makeTroop(side,kind,i,count);
+  }
+  function removeArmy(side){
+    for(let i=battleUnits.length-1;i>=0;i--){const u=battleUnits[i];if(u.userData.side!==side)continue;scene.remove(u);u.traverse(o=>{const n=pickables.indexOf(o);if(n>=0)pickables.splice(n,1);});battleUnits.splice(i,1);if(selectedUnit===u)selectedUnit=null;}
+  }
+  function resetArmies(){
+    removeArmy("red");removeArmy("blue");battleStarted=false;selectedUnit=null;castleIntegrity.red=100;castleIntegrity.blue=100;
+    for(const side of ["red","blue"]){const c=castles[side];c.rotation.set(0,0,0);c.position.y=0;c.userData.fallen=false;c.userData.damage=0;c.children.forEach(p=>{if(p.material?.emissive){p.material.emissive.set(0x000000);p.material.emissiveIntensity=.0;}});}
+  }
+  function setActiveSide(side){activeSide=side;selectedUnit=null;}
+  function selectTroop(unit){
+    if(selectedUnit){selectedUnit.userData.selected=false;}
+    selectedUnit=unit;unit.userData.selected=true;
+    window.CrownGame?.onUnitSelected?.({side:unit.userData.side,kind:unit.userData.kind});
+  }
+  function groundPoint(event){
+    const rect=renderer.domElement.getBoundingClientRect();
+    pointer.x=((event.clientX-rect.left)/rect.width)*2-1;
+    pointer.y=-((event.clientY-rect.top)/rect.height)*2+1;
+    raycaster.setFromCamera(pointer,camera);
+    const point=new THREE.Vector3();return raycaster.ray.intersectPlane(groundPlane,point)?point:null;
+  }
+  renderer.domElement.style.pointerEvents="auto";
+  renderer.domElement.addEventListener("pointerdown",event=>{
+    if(event.button!==0)return;
+    const rect=renderer.domElement.getBoundingClientRect();
+    pointer.x=((event.clientX-rect.left)/rect.width)*2-1;pointer.y=-((event.clientY-rect.top)/rect.height)*2+1;
+    raycaster.setFromCamera(pointer,camera);
+    const hit=raycaster.intersectObjects(pickables,false).find(h=>h.object.userData.troop);
+    const clicked=hit?.object.userData.troop;
+    if(clicked){
+      if(selectedUnit&&selectedUnit!==clicked&&selectedUnit.userData.side!==clicked.userData.side){
+        selectedUnit.userData.target=clicked;selectedUnit.userData.destination=null;
+        if(!battleStarted){selectTroop(clicked);return;}
+      }else{selectTroop(clicked);return;}
+    }
+    if(selectedUnit){
+      const p=groundPoint(event);if(!p)return;
+      const side=selectedUnit.userData.side;
+      // Troops can cross the centre line and enter either kingdom's territory.
+      selectedUnit.userData.destination=new THREE.Vector3(THREE.MathUtils.clamp(p.x,-8.2,8.2),0,THREE.MathUtils.clamp(p.z,-4.4,4.4));
+      selectedUnit.userData.target=null;
+      selectedUnit.userData.selected=false;selectedUnit=null;
+    }
+  });
+  function beginBattle(){
+    battleStarted=true;selectedUnit=null;
+    battleUnits.forEach(u=>{u.userData.destination=null;u.userData.target=null;});
+  }
+  function updateTroopAI(delta,time){
+    for(const unit of battleUnits){
+      const d=unit.userData;if(d.hp<=0)continue;
+      let target=d.target;
+      if(!target||target.userData.hp<=0){
+        d.target=null;let nearest=null,nearestDist=1.45;
+        for(const enemy of battleUnits){if(enemy.userData.side===d.side||enemy.userData.hp<=0)continue;const dist=unit.position.distanceTo(enemy.position);if(dist<nearestDist){nearest=enemy;nearestDist=dist;}}
+        if(nearest){target=nearest;d.target=nearest;d.destination=null;}
+      }
+      if(target&&target.userData.hp>0){
+        const distance=unit.position.distanceTo(target.position);
+        if(distance>.48){moveToward(unit,target.position,delta,time);}
+        else if(time>d.attackAt){target.userData.hp-=1;d.attackAt=time+.9;if(target.userData.hp<=0){scene.remove(target);target.userData.hp=0;}}
+        continue;
+      }
+      if(d.destination){const distance=unit.position.distanceTo(d.destination);if(distance>.14)moveToward(unit,d.destination,delta,time);else d.destination=null;}
+      else if(battleStarted){
+        const enemySide=d.side==="red"?"blue":"red";
+        const castle=castles[enemySide];const approach=new THREE.Vector3(castle.position.x+(d.side==="red"?-1.25:1.25),0,-1.4);
+        const distance=unit.position.distanceTo(approach);
+        if(distance>1.35)moveToward(unit,approach,delta,time);
+        else if(time>d.attackAt){
+          d.attackAt=time+1.2;castleIntegrity[enemySide]=Math.max(0,castleIntegrity[enemySide]-.12);
+          window.CrownGame?.onCastleDamage?.(enemySide,.12,castleIntegrity[enemySide]);
+          siegeImpact(enemySide,castleIntegrity[enemySide],.12);
+        }
+      }
+    }
+  }
+  function moveToward(unit,target,delta,time){
+    const d=unit.userData;const dx=target.x-unit.position.x,dz=target.z-unit.position.z;
+    const distance=Math.hypot(dx,dz);if(distance<.001)return;
+    const speed=d.kind==="knight"?2.15:d.kind==="archer"?1.65:1.4;
+    const step=Math.min(distance,speed*delta);
+    unit.position.x+=dx/distance*step;unit.position.z+=dz/distance*step;
+    unit.rotation.y=Math.atan2(dx,dz);
+    unit.position.y=Math.abs(Math.sin(time*10+d.phase))*.035;
+    d.walking=true;
+  }
+
   function resize() {
     const w = arena.clientWidth, h = arena.clientHeight;
     if (!w || !h) return;
@@ -370,6 +501,8 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
         group.rotation.z = Math.sin(t * 1.4 + group.position.x) * .018;
       }
     }
+    const delta=Math.min(clock.getDelta(),.05);
+    updateTroopAI(delta,t);
     renderer.render(scene, camera);
     requestAnimationFrame(render);
   }
@@ -378,5 +511,5 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
   resize();
   render();
 
-  window.Crown3D = { sync, animateCommand, siegeImpact, supported: true };
+  window.Crown3D = { sync, animateCommand, siegeImpact, deployArmy, removeArmy, resetArmies, setActiveSide, beginBattle, supported: true };
 })();
