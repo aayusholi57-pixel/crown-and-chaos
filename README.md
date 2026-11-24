@@ -15,6 +15,9 @@ Play the live game: **[Crown & Chaos on Render](https://crown-and-chaos.onrender
 - Army deployment: choose 10, 50, or 100 soldiers per kingdom
 - Individual click-to-command controls: select a soldier, then click a destination or enemy
 - Troops automatically form ranks inside their own kingdom and can cross into enemy territory
+- Articulated 3D fighters with visible arms, hands, legs, shields, and weapons
+- Animated marching, melee weapon swings, archer projectiles, and mage bolts
+- Side-on battlefield camera inspired by classic lane-based stick-war strategy games
 - Autonomous battlefield AI: soldiers seek nearby enemies, fight, advance, and besiege the opposing castle
 - Four stylized 3D hero classes: shield-bearing Soldier, bow-wielding Archer, mounted Knight, and arcane Mage
 - Alternating Red and Blue command phases
