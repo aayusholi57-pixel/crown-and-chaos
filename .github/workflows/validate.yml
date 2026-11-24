@@ -15,7 +15,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Check classic game logic
+      - name: Check active 2D battlefield engine
+        run: node --check game2d.js
+      - name: Check game controller
         run: node --check game.js
-      - name: Check Three.js ES module syntax
-        run: node --input-type=module --check < game3d.js
+      - name: Verify active renderer wiring
+        run: |
+          grep -q 'src="game2d.js"' index.html
+          grep -q 'src="game.js"' index.html
+          ! grep -q 'src="game3d.js"' index.html
+      - name: Verify static site entry point
+        run: test -s index.html && test -s styles.css
