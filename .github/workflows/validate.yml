@@ -19,6 +19,8 @@ jobs:
         run: node --check game2d.js
       - name: Check game controller
         run: node --check game.js
+      - name: Test autonomous battle movement
+        run: node tests/ai-smoke.cjs
       - name: Verify active renderer wiring
         run: |
           grep -q 'src="game2d.js"' index.html
