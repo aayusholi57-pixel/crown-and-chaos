@@ -2,8 +2,8 @@
   "use strict";
   const $ = id => document.getElementById(id);
   const state = {
-    turn:"red", phase:"red", counts:{red:10,blue:10}, deployed:{red:false,blue:false},
-    classes:{red:"soldier",blue:"soldier"}, selectedCount:10, selectedClass:"soldier",
+    turn:"red", phase:"red", counts:{red:200,blue:200}, deployed:{red:false,blue:false},
+    classes:{red:"soldier",blue:"soldier"}, selectedCount:200, selectedClass:"soldier",
     sound:true, round:1, running:false, difficulty:"warlord", health:{red:100,blue:100}
   };
   const classNames={soldier:"Shield Guard",archer:"Archer",knight:"Knight",mage:"Mage"};
@@ -33,17 +33,20 @@
   }
   function announce(message){$("battleNotice").textContent=message;}
   document.querySelectorAll(".tool").forEach(b=>b.addEventListener("click",()=>{if(state.phase==="battle"||state.deployed[state.turn])return;state.selectedClass=b.dataset.tool;update();}));
-  $("troopCount").addEventListener("change",e=>{state.selectedCount=Number(e.target.value);});
+  $("troopCount").addEventListener("input",e=>{
+    const value=Number(e.target.value);
+    if(Number.isSafeInteger(value)&&value>0)state.selectedCount=value;
+  });
   $("aiDifficulty").addEventListener("change",e=>{state.difficulty=e.target.value;window.Crown2D?.setDifficulty(state.difficulty);update();});
   $("deployBtn").addEventListener("click",()=>{
     if(state.phase==="battle"||state.deployed[state.turn])return;
-    state.counts[state.turn]=state.selectedCount;state.classes[state.turn]=state.selectedClass;state.deployed[state.turn]=true;
+    state.selectedCount=Number($("troopCount").value)||state.selectedCount;state.counts[state.turn]=state.selectedCount;state.classes[state.turn]=state.selectedClass;state.deployed[state.turn]=true;
     window.Crown3D?.deployArmy(state.turn,state.selectedCount,state.selectedClass);
     tone(320,.14);announce(state.turn.toUpperCase()+" KINGDOM: "+state.selectedCount+" "+state.selectedClass.toUpperCase()+" TROOPS DEPLOYED.");
     update();
   });
   $("advanceBtn").addEventListener("click",()=>{
-    if(state.phase==="red"&&state.deployed.red){state.phase="blue";state.turn="blue";state.selectedClass="soldier";$("troopCount").value="10";state.selectedCount=10;window.Crown3D?.setActiveSide("blue");announce("BLUE KING: DEPLOY YOUR ARMY IN THE AZURE TERRITORY.");update();}
+    if(state.phase==="red"&&state.deployed.red){state.phase="blue";state.turn="blue";state.selectedClass="soldier";$("troopCount").value="200";state.selectedCount=200;window.Crown3D?.setActiveSide("blue");announce("BLUE KING: DEPLOY YOUR ARMY IN THE AZURE TERRITORY.");update();}
     else if(state.phase==="blue"&&state.deployed.blue){startBattle();}
   });
   function startBattle(){
@@ -77,11 +80,11 @@
   $("beginBtn").addEventListener("click",()=>{$("intro").classList.add("hidden");$("gameShell").classList.remove("hidden");window.Crown3D?.setActiveSide("red");update();});
   $("quickBattleBtn").addEventListener("click",()=>{
     $("intro").classList.add("hidden");$("gameShell").classList.remove("hidden");
-    Object.assign(state,{turn:"red",phase:"battle",counts:{red:10,blue:10},deployed:{red:true,blue:true},classes:{red:"soldier",blue:"soldier"},selectedCount:10,selectedClass:"soldier",health:{red:100,blue:100}});
-    $("troopCount").value="10";$("aiDifficulty").value=state.difficulty;window.Crown2D?.setDifficulty(state.difficulty);
+    Object.assign(state,{turn:"red",phase:"battle",counts:{red:200,blue:200},deployed:{red:true,blue:true},classes:{red:"soldier",blue:"soldier"},selectedCount:200,selectedClass:"soldier",health:{red:100,blue:100}});
+    $("troopCount").value="200";$("aiDifficulty").value=state.difficulty;window.Crown2D?.setDifficulty(state.difficulty);
     window.Crown3D?.resetArmies();
-    window.Crown3D?.deployArmy("red",10,"soldier");
-    window.Crown3D?.deployArmy("blue",10,"soldier");
+    window.Crown3D?.deployArmy("red",200,"soldier");
+    window.Crown3D?.deployArmy("blue",200,"soldier");
     window.Crown3D?.beginBattle();
     announce("QUICK BATTLE: BOTH ARMIES ARE MARCHING AUTOMATICALLY.");
     tone(120,.35);update();
@@ -93,8 +96,8 @@
   $("gotIt").addEventListener("click",()=>$("modal").classList.add("hidden"));
   $("soundToggle").addEventListener("click",()=>{state.sound=!state.sound;$("soundToggle").innerHTML=state.sound?"♫ <span>SOUND ON</span>":"♫ <span>SOUND OFF</span>";});
   function reset(){
-    Object.assign(state,{turn:"red",phase:"red",counts:{red:10,blue:10},deployed:{red:false,blue:false},classes:{red:"soldier",blue:"soldier"},selectedCount:10,selectedClass:"soldier",round:1,running:false,health:{red:100,blue:100}});
-    $("troopCount").value="10";$("aiDifficulty").value=state.difficulty;window.Crown2D?.setDifficulty(state.difficulty);window.Crown3D?.resetArmies();window.Crown3D?.setActiveSide("red");announce("Choose 10, 50, or 100 troops and deploy your first formation.");update();
+    Object.assign(state,{turn:"red",phase:"red",counts:{red:200,blue:200},deployed:{red:false,blue:false},classes:{red:"soldier",blue:"soldier"},selectedCount:200,selectedClass:"soldier",round:1,running:false,health:{red:100,blue:100}});
+    $("troopCount").value="200";$("aiDifficulty").value=state.difficulty;window.Crown2D?.setDifficulty(state.difficulty);window.Crown3D?.resetArmies();window.Crown3D?.setActiveSide("red");announce("Enter any positive army size and deploy your first formation.");update();
   }
   window.addEventListener("keydown",e=>{if(e.key==="Escape")$("modal").classList.add("hidden");});
   announce("Choose 10, 50, or 100 troops and deploy your first formation.");update();
