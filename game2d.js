@@ -1,22 +1,20 @@
 (() => {
   "use strict";
   const arena = document.getElementById("arena");
-  const stage = document.getElementById("threeStage");
-  if (!arena || !stage) return;
-  stage.innerHTML = "";
+  if (!arena) return;
   const canvas = document.createElement("canvas");
   canvas.id = "battle2d";
   canvas.setAttribute("aria-label", "2D battlefield. Select a soldier and click a destination.");
-  stage.appendChild(canvas);
+  arena.appendChild(canvas);
   const ctx = canvas.getContext("2d");
   const W = 1200, H = 520, ground = 410;
   const state = { active:"red", battle:false, units:[], projectiles:[], particles:[], selected:null, last:0, raf:0, castle:{red:100,blue:100}, dimensions:{w:0,h:0} };
   const colors = { red:{main:"#bd514d",light:"#f1a49a",dark:"#632b31",metal:"#d7b18a"}, blue:{main:"#638ec2",light:"#b5d5f4",dark:"#263e62",metal:"#d9d8ce"} };
   const stats = {
-    soldier:{hp:100,speed:42,range:27,damage:13,cooldown:850,color:"#d8d0bb"},
-    archer:{hp:70,speed:34,range:235,damage:11,cooldown:1500,color:"#b5a16e"},
-    knight:{hp:175,speed:52,range:31,damage:24,cooldown:1050,color:"#d5c6a2"},
-    mage:{hp:80,speed:31,range:190,damage:18,cooldown:1900,color:"#aa8cda"}
+    soldier:{hp:100,speed:105,range:34,damage:15,cooldown:720,color:"#d8d0bb"},
+    archer:{hp:72,speed:88,range:205,damage:13,cooldown:1250,color:"#b5a16e"},
+    knight:{hp:180,speed:125,range:39,damage:27,cooldown:900,color:"#d5c6a2"},
+    mage:{hp:84,speed:82,range:175,damage:20,cooldown:1550,color:"#aa8cda"}
   };
   let uid=1;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -75,7 +73,12 @@
   }
   function moveToward(u,x,y,dt,speed=u.speed){
     const dx=x-u.x,dy=y-u.y,d=Math.hypot(dx,dy);
-    if(d>2){const step=Math.min(d,speed*dt);u.x+=dx/d*step;u.y+=dy/d*step;u.walk+=dt*speed*.12;return true;}return false;
+    if(d>2){
+      const step=Math.min(d,speed*dt);
+      u.x+=dx/d*step;u.y+=dy/d*step;u.walk+=dt*speed*.12;
+      return true;
+    }
+    return false;
   }
   function attack(u,target,now){
     if(now-u.lastAttack<u.cooldown)return;
