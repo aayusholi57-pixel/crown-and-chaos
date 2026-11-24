@@ -13,7 +13,7 @@
     try{audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type="triangle";o.frequency.value=freq;g.gain.setValueAtTime(.035,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+duration);}catch(_){}
   }
   function update(){
-    $("turnLabel").textContent=state.phase==="battle"?"INVASION IN PROGRESS":state.turn.toUpperCase()+" KING'S DEPLOYMENT";
+    $("turnLabel").textContent=state.phase==="battle"?"INVASION IN PROGRESS":state.phase==="finished"?"BATTLE COMPLETE":state.turn.toUpperCase()+" KING'S DEPLOYMENT";
     $("turnDot").className="turn-dot "+state.turn;
     $("toolLabel").textContent=state.phase==="battle"?"Select a soldier, then click a destination":classNames[state.selectedClass]+" · "+state.counts[state.turn]+" troops";
     $("redStatus").textContent=(state.deployed.red?state.counts.red+" troops deployed":"Awaiting deployment")+" · "+(state.classes.red||"soldier").toUpperCase();
@@ -58,6 +58,7 @@
   }
   window.CrownGame={
     onCastleDamage(side,damage,health){
+      if(state.phase==="finished")return;
       state.health[side]=Math.max(0,health);$(side+"Health").style.width=state.health[side]+"%";
       announce(side.toUpperCase()+" STRONGHOLD UNDER SIEGE · "+Math.round(state.health[side])+"% INTEGRITY");
       if(state.health[side]<=0)finishBattle(side==="red"?"blue":"red");
