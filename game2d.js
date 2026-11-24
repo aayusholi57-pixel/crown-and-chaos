@@ -275,9 +275,11 @@
   if(!state.raf){state.last=performance.now();state.raf=requestAnimationFrame(loop);}
   function setDifficulty(level){state.difficulty=["standard","veteran","warlord"].includes(level)?level:"warlord";}
   function getStats(){
-    let red=0,blue=0;
-    for(const u of state.units)if(!u.dead){if(u.side==="red")red++;else blue++;}
-    return {red,blue,fps:state.fps,redPlan:state.commanders.red,bluePlan:state.commanders.blue,castle:{...state.castle},difficulty:state.difficulty};
+    let red=0,blue=0,redX=0,blueX=0;
+    for(const u of state.units)if(!u.dead){
+      if(u.side==="red"){red++;redX+=u.x;}else{blue++;blueX+=u.x;}
+    }
+    return {red,blue,redAvgX:red?redX/red:0,blueAvgX:blue?blueX/blue:0,fps:state.fps,redPlan:state.commanders.red,bluePlan:state.commanders.blue,castle:{...state.castle},difficulty:state.difficulty};
   }
   window.Crown2D={deployArmy,setActiveSide,beginBattle,removeArmy,resetArmies,setDifficulty,getStats};
   // Keep the old controller interface intact while replacing its 3D renderer.
