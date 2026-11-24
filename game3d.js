@@ -438,7 +438,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     const aura=new THREE.Mesh(new THREE.RingGeometry(.2,.25,20),new THREE.MeshBasicMaterial({color:side==="red"?0xff584a:0x64aaff,transparent:true,opacity:.35,side:THREE.DoubleSide}));
     aura.rotation.x=-Math.PI/2;aura.position.y=.065;group.add(aura);
     group.userData={side,kind,hp:kind==="knight"?6:kind==="soldier"?4:3,selected:false,destination:null,target:null,attackAt:0,attackStarted:-10,phase:index*.23,walking:false,baseMaterial:base.material,leftArm,rightArm,leftLeg,rightLeg,aura,weapon};
-    group.traverse(obj=>{if(obj.isMesh){obj.userData.troop=group;pickables.push(obj);obj.castShadow=true;}});
+    group.traverse(obj=>{if(obj.isMesh){obj.userData.troop=group;pickables.push(obj);obj.castShadow=false;obj.receiveShadow=false;}});
     scene.add(group);battleUnits.push(group);return group;
   }
   function deployArmy(side,count,kind){
@@ -500,8 +500,8 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
       const d=unit.userData;if(d.hp<=0)continue;d.walking=false;
       let target=d.target;
       if(!target||target.userData.hp<=0){
-        d.target=null;let nearest=null,bestScore=2.5;
-        for(const enemy of battleUnits){if(enemy.userData.side===d.side||enemy.userData.hp<=0)continue;const dist=unit.position.distanceTo(enemy.position);const score=dist+(targetLoad.get(enemy)||0)*.52;if(score<bestScore){nearest=enemy;bestScore=score;}}
+        d.target=null;let nearest=null,bestScore=4.0;
+        for(const enemy of battleUnits){if(enemy.userData.side===d.side||enemy.userData.hp<=0)continue;const dist=unit.position.distanceTo(enemy.position);const score=dist+(targetLoad.get(enemy)||0)*.3;if(score<bestScore){nearest=enemy;bestScore=score;}}
         if(nearest){target=nearest;d.target=nearest;targetLoad.set(nearest,(targetLoad.get(nearest)||0)+1);d.destination=null;}
       }
       if(target&&target.userData.hp>0){
