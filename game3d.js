@@ -383,21 +383,60 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
   const castleIntegrity={red:100,blue:100};
   function makeTroop(side,kind,index,count){
     const group=new THREE.Group();
-    const armor=troopMaterials[side], baseMat=side==="red"?troopMaterials.baseRed:troopMaterials.baseBlue;
+    const armor=troopMaterials[side],baseMat=side==="red"?troopMaterials.baseRed:troopMaterials.baseBlue;
     const base=new THREE.Mesh(troopGeometry.base,baseMat);base.position.y=.035;group.add(base);
-    const body=new THREE.Mesh(troopGeometry.body,armor);body.position.y=.38;group.add(body);
-    const head=new THREE.Mesh(troopGeometry.head,troopMaterials.skin);head.position.y=.73;group.add(head);
-    const shield=new THREE.Mesh(troopGeometry.shield,armor);shield.position.set(-.19,.4,.04);group.add(shield);
-    const spear=new THREE.Mesh(troopGeometry.spear,troopMaterials.steel);spear.position.set(.2,.48,0);spear.rotation.z=-.12;group.add(spear);
+    const body=new THREE.Mesh(troopGeometry.body,armor);body.position.y=.43;body.scale.set(.92,1.12,.9);group.add(body);
+    const head=new THREE.Mesh(troopGeometry.head,troopMaterials.skin);head.position.set(0,.86,0);group.add(head);
+    const helmet=new THREE.Mesh(new THREE.SphereGeometry(.125,8,6,0,Math.PI*2,0,Math.PI*.62),side==="red"?new THREE.MeshStandardMaterial({color:0x59272d,metalness:.55,roughness:.38}):new THREE.MeshStandardMaterial({color:0x263d65,metalness:.55,roughness:.38}));
+    helmet.position.set(0,.91,0);group.add(helmet);
+    const trim=new THREE.Mesh(new THREE.BoxGeometry(.24,.035,.035),troopMaterials.steel);trim.position.set(.015,.86,.11);group.add(trim);
+    const limbGeo=new THREE.CapsuleGeometry(.055,.17,2,5);
+    const handGeo=new THREE.SphereGeometry(.065,7,6);
+    const leftArm=new THREE.Group();leftArm.position.set(0,.66,-.19);group.add(leftArm);
+    const rightArm=new THREE.Group();rightArm.position.set(0,.66,.19);group.add(rightArm);
+    for(const pivot of [leftArm,rightArm]){
+      const upper=new THREE.Mesh(limbGeo,armor);upper.position.y=-.12;pivot.add(upper);
+      const elbow=new THREE.Group();elbow.position.y=-.23;pivot.add(elbow);
+      const lower=new THREE.Mesh(limbGeo,troopMaterials.steel);lower.scale.set(.78,.86,.78);lower.position.y=-.1;elbow.add(lower);
+      const hand=new THREE.Mesh(handGeo,troopMaterials.skin);hand.position.y=-.21;elbow.add(hand);
+      pivot.userData.elbow=elbow;
+    }
+    const leftLeg=new THREE.Group();leftLeg.position.set(0,.28,-.105);group.add(leftLeg);
+    const rightLeg=new THREE.Group();rightLeg.position.set(0,.28,.105);group.add(rightLeg);
+    for(const leg of [leftLeg,rightLeg]){
+      const shin=new THREE.Mesh(new THREE.CapsuleGeometry(.065,.2,2,5),troopMaterials.steel);shin.position.y=-.13;leg.add(shin);
+      const boot=new THREE.Mesh(new THREE.BoxGeometry(.13,.09,.12),baseMat);boot.position.set(.035,-.27,.015);leg.add(boot);
+    }
+    const weapon=new THREE.Group();weapon.position.set(.015,-.29,0);rightArm.add(weapon);
+    if(kind==="archer"){
+      const bowCurve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(.02,-.03,-.02),new THREE.Vector3(.2,.1,-.02),new THREE.Vector3(.02,.23,-.02));
+      weapon.add(new THREE.Mesh(new THREE.TubeGeometry(bowCurve,12,.018,5,false),new THREE.MeshStandardMaterial({color:0x93683e})));
+      weapon.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(.02,-.03,-.02),new THREE.Vector3(.02,.23,-.02)]),new THREE.LineBasicMaterial({color:0xe8d9bd})));
+      const arrow=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.34,5),troopMaterials.steel);arrow.rotation.z=-Math.PI/2;arrow.position.set(.14,.1,0);weapon.add(arrow);
+    }else if(kind==="mage"){
+      const staff=new THREE.Mesh(new THREE.CylinderGeometry(.018,.025,.68,6),new THREE.MeshStandardMaterial({color:0x785437}));staff.position.y=.13;weapon.add(staff);
+      const orb=new THREE.Mesh(new THREE.OctahedronGeometry(.095),new THREE.MeshStandardMaterial({color:0x9a83f5,emissive:0x6550db,emissiveIntensity:1.6}));orb.position.set(0,.51,0);weapon.add(orb);
+    }else{
+      const blade=new THREE.Mesh(new THREE.CylinderGeometry(kind==="knight"?.035:.022,kind==="knight"?.045:.025,kind==="knight"?.72:.58,6),troopMaterials.steel);
+      blade.position.set(.06,.18,0);blade.rotation.z=-.35;weapon.add(blade);
+      const grip=new THREE.Mesh(new THREE.BoxGeometry(.2,.045,.07),new THREE.MeshStandardMaterial({color:0x8d673b}));grip.position.set(0,-.05,0);weapon.add(grip);
+    }
+    const shield=new THREE.Mesh(new THREE.BoxGeometry(.1,.31,.24),armor);shield.position.set(.04,-.26,0);leftArm.add(shield);
+    if(kind==="archer"||kind==="mage")shield.visible=false;
+    if(kind==="knight"){
+      body.scale.set(1.12,1.2,1.12);head.scale.setScalar(1.1);
+      const plume=new THREE.Mesh(new THREE.ConeGeometry(.055,.22,5),new THREE.MeshStandardMaterial({color:0xd4b06b}));plume.position.set(0,1.1,0);group.add(plume);
+    }
+    if(kind==="mage"){
+      const cape=new THREE.Mesh(new THREE.ConeGeometry(.24,.55,5),new THREE.MeshStandardMaterial({color:0x514078,side:THREE.DoubleSide}));cape.position.set(-.12,.42,-.12);cape.rotation.x=Math.PI;group.add(cape);
+    }
     const cols=Math.ceil(Math.sqrt(count)),row=Math.floor(index/cols),col=index%cols;
-    const direction=side==="red"?1:-1;
-    const startX=side==="red"?-5.9:5.9;
+    const direction=side==="red"?1:-1,startX=side==="red"?-5.9:5.9;
     group.position.set(startX+direction*col*.38,0,(row-(Math.ceil(count/cols)-1)/2)*.38);
     group.rotation.y=side==="red"?Math.PI/2:-Math.PI/2;
-    if(kind==="archer"){shield.visible=false;spear.visible=false;const bowCurve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(-.22,.24,.08),new THREE.Vector3(-.46,.5,.08),new THREE.Vector3(-.22,.76,.08));group.add(new THREE.Mesh(new THREE.TubeGeometry(bowCurve,10,.025,5,false),new THREE.MeshStandardMaterial({color:0x8a6037})));}
-    if(kind==="knight"){body.scale.set(1.2,1.15,1.2);head.scale.setScalar(1.08);}
-    if(kind==="mage"){shield.visible=false;spear.visible=false;const staff=new THREE.Mesh(troopGeometry.spear,troopMaterials.steel);staff.position.set(.22,.5,0);group.add(staff);const orb=new THREE.Mesh(new THREE.OctahedronGeometry(.11),new THREE.MeshStandardMaterial({color:0x9a83f5,emissive:0x6550db,emissiveIntensity:1.4}));orb.position.set(.22,.84,0);group.add(orb);}
-    group.userData={side,kind,hp:kind==="knight"?6:kind==="soldier"?4:3,selected:false,destination:null,target:null,attackAt:0,phase:index*.23,walking:false,baseMaterial:base.material};
+    const aura=new THREE.Mesh(new THREE.RingGeometry(.2,.25,20),new THREE.MeshBasicMaterial({color:side==="red"?0xff584a:0x64aaff,transparent:true,opacity:.35,side:THREE.DoubleSide}));
+    aura.rotation.x=-Math.PI/2;aura.position.y=.065;group.add(aura);
+    group.userData={side,kind,hp:kind==="knight"?6:kind==="soldier"?4:3,selected:false,destination:null,target:null,attackAt:0,attackStarted:-10,phase:index*.23,walking:false,baseMaterial:base.material,leftArm,rightArm,leftLeg,rightLeg,aura,weapon};
     group.traverse(obj=>{if(obj.isMesh){obj.userData.troop=group;pickables.push(obj);obj.castShadow=true;}});
     scene.add(group);battleUnits.push(group);return group;
   }
