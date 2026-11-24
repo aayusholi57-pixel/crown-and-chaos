@@ -5,14 +5,14 @@
   const state = {
     turn: "red", phase: "red", tool: "soldier",
     commands: { red: [], blue: [] }, paths: [], drawing: null,
-    health: { red: 100, blue: 100 }, round: 1, sound: true, running: false
+    health: { red: 100, blue: 100 }, guard: { red: false, blue: false }, round: 1, sound: true, running: false
   };
   const colors = { red: "#e36b5d", blue: "#83aee7" };
   const unitStats = {
-    soldier: { damage: 12, speed: 1, label: "Soldier" },
-    archer: { damage: 15, speed: 1.15, label: "Archer" },
-    knight: { damage: 21, speed: .85, label: "Knight" },
-    mage: { damage: 18, speed: .95, label: "Mage" }
+    soldier: { damage: 10, speed: 1, label: "Soldier", power: "SHIELD GUARD", description: "Protects your king from the next hit (30% less damage)." },
+    archer: { damage: 15, speed: 1.15, label: "Archer", power: "ARROW VOLLEY", description: "A precise volley adds 8 bonus damage." },
+    knight: { damage: 21, speed: .85, label: "Knight", power: "IRON CHARGE", description: "A mounted charge adds 10 bonus damage." },
+    mage: { damage: 18, speed: .95, label: "Mage", power: "METEOR", description: "Arcane impact adds 12 bonus damage." }
   };
   let audioCtx = null;
 
@@ -80,19 +80,25 @@
     const draft = state.drawing; state.drawing = null;
     if (draft.points.length > 1) {
       const command = { side: state.turn, tool: state.tool, points: draft.points };
-      state.commands[state.turn].push(command); state.paths.push(command); playTone(260, .07);
+      state.commands[state.turn].push(command); state.paths.push(command); playTone(260, .07); sync3DUnits();
     }
     draw(); updateUI();
   }
   canvas.addEventListener("pointerup", finishDrawing);
   canvas.addEventListener("pointercancel", finishDrawing);
 
+  function sync3DUnits() {
+    if (window.Crown3D?.supported) {
+      window.Crown3D.sync(state.paths, canvas.clientWidth, canvas.clientHeight);
+    }
+  }
+
   function updateUI() {
     const redCount = state.commands.red.length, blueCount = state.commands.blue.length;
     const redActive = state.phase === "red", blueActive = state.phase === "blue";
     $("turnLabel").textContent = state.phase === "battle" ? "BATTLE IN PROGRESS" : state.turn.toUpperCase() + " KING'S TURN";
     $("turnDot").className = "turn-dot " + state.turn;
-    $("toolLabel").textContent = state.phase === "battle" ? "The armies are clashing" : state.commands[state.turn].length >= 3 ? "Command limit reached" : "Choose your formation";
+    $("toolLabel").textContent = state.phase === "battle" ? "The armies are clashing" : state.commands[state.turn].length >= 3 ? "Command limit reached" : unitStats[state.tool].power + " · " + unitStats[state.tool].description;
     $("redStatus").textContent = redCount + "/3 commands issued" + (redActive ? " · commanding" : "");
     $("blueStatus").textContent = blueCount + "/3 commands issued" + (blueActive ? " · commanding" : "");
     $("redHealth").style.width = state.health.red + "%";
@@ -121,7 +127,7 @@
     if (!commands.length) return;
     const last = commands.pop();
     state.paths.splice(state.paths.lastIndexOf(last), 1);
-    draw(); updateUI();
+    draw(); sync3DUnits(); updateUI();
   });
   $("advanceBtn").addEventListener("click", () => {
     if (state.phase === "red") {
@@ -177,6 +183,10 @@
     return points[points.length - 1];
   }
   async function animateUnit(command) {
+    if (window.Crown3D?.supported) {
+      await window.Crown3D.animateCommand(command, canvas.clientWidth, canvas.clientHeight);
+      return;
+    }
     const stats = unitStats[command.tool], steps = Math.max(18, Math.min(42, Math.round(command.points.length * 1.5)));
     for (let i = 0; i <= steps; i++) {
       draw();
@@ -200,8 +210,18 @@
       const enemy = command.side === "red" ? "blue" : "red";
       const stats = unitStats[command.tool];
       const terrainBonus = command.points.length > 5 ? 2 : 0;
-      const damage = stats.damage + terrainBonus + Math.floor(Math.random() * 4);
+      const powerBonus = command.tool === "archer" ? 8 : command.tool === "knight" ? 10 : command.tool === "mage" ? 12 : 0;
+      let damage = stats.damage + terrainBonus + powerBonus + Math.floor(Math.random() * 4);
+      if (state.guard[enemy]) {
+        damage = Math.ceil(damage * .7);
+        state.guard[enemy] = false;
+        $(enemy + "Status").textContent = "Shield absorbed part of the strike!";
+      }
       state.health[enemy] = Math.max(0, state.health[enemy] - damage);
+      if (command.tool === "soldier") {
+        state.guard[command.side] = true;
+        $(command.side + "Status").textContent = "Shield Guard ready · next hit reduced";
+      }
       $("combatFlash").classList.remove("flash"); void $("combatFlash").offsetWidth; $("combatFlash").classList.add("flash");
       playTone(command.tool === "mage" ? 520 : command.tool === "knight" ? 190 : 145, .2);
       updateUI(); await wait(330);
@@ -215,14 +235,16 @@
     }
     state.round++;
     state.commands = { red: [], blue: [] }; state.paths = [];
+    state.guard = { red: false, blue: false };
     state.phase = "red"; state.turn = "red"; state.tool = "soldier";
-    updateUI(); draw();
+    updateUI(); draw(); sync3DUnits();
   }
   function reset() {
     state.turn = "red"; state.phase = "red"; state.commands = { red: [], blue: [] };
     state.paths = []; state.drawing = null; state.health = { red: 100, blue: 100 };
+    state.guard = { red: false, blue: false };
     state.round = 1; state.running = false; state.tool = "soldier";
-    draw(); updateUI();
+    draw(); sync3DUnits(); updateUI();
   }
   window.addEventListener("resize", resize);
   if ("ResizeObserver" in window) new ResizeObserver(resize).observe($("arena"));
