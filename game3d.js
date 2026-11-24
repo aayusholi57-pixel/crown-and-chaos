@@ -397,7 +397,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     if(kind==="archer"){shield.visible=false;spear.visible=false;const bowCurve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(-.22,.24,.08),new THREE.Vector3(-.46,.5,.08),new THREE.Vector3(-.22,.76,.08));group.add(new THREE.Mesh(new THREE.TubeGeometry(bowCurve,10,.025,5,false),new THREE.MeshStandardMaterial({color:0x8a6037})));}
     if(kind==="knight"){body.scale.set(1.2,1.15,1.2);head.scale.setScalar(1.08);}
     if(kind==="mage"){shield.visible=false;spear.visible=false;const staff=new THREE.Mesh(troopGeometry.spear,troopMaterials.steel);staff.position.set(.22,.5,0);group.add(staff);const orb=new THREE.Mesh(new THREE.OctahedronGeometry(.11),new THREE.MeshStandardMaterial({color:0x9a83f5,emissive:0x6550db,emissiveIntensity:1.4}));orb.position.set(.22,.84,0);group.add(orb);}
-    group.userData={side,kind,hp:3,selected:false,destination:null,target:null,attackAt:0,phase:index*.23,walking:false,baseMaterial:base.material};
+    group.userData={side,kind,hp:kind==="knight"?6:kind==="soldier"?4:3,selected:false,destination:null,target:null,attackAt:0,phase:index*.23,walking:false,baseMaterial:base.material};
     group.traverse(obj=>{if(obj.isMesh){obj.userData.troop=group;pickables.push(obj);obj.castShadow=true;}});
     scene.add(group);battleUnits.push(group);return group;
   }
@@ -464,8 +464,9 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
       }
       if(target&&target.userData.hp>0){
         const distance=unit.position.distanceTo(target.position);
-        if(distance>.48){moveToward(unit,target.position,delta,time);}
-        else if(time>d.attackAt){target.userData.hp-=1;d.attackAt=time+.9;if(target.userData.hp<=0){target.traverse(obj=>{const pickIndex=pickables.indexOf(obj);if(pickIndex>=0)pickables.splice(pickIndex,1);});scene.remove(target);target.userData.hp=0;}}
+        const reach=d.kind==="archer"?1.55:d.kind==="mage"?1.8:.48;
+        if(distance>reach){moveToward(unit,target.position,delta,time);}
+        else if(time>d.attackAt){target.userData.hp-=d.kind==="knight"?2:d.kind==="mage"?1.5:1;d.attackAt=time+(d.kind==="archer"?.95:d.kind==="knight"?1.05:1.1);if(target.userData.hp<=0){target.traverse(obj=>{const pickIndex=pickables.indexOf(obj);if(pickIndex>=0)pickables.splice(pickIndex,1);});scene.remove(target);target.userData.hp=0;}}
         continue;
       }
       if(d.destination){const distance=unit.position.distanceTo(d.destination);if(distance>.14)moveToward(unit,d.destination,delta,time);else d.destination=null;}
@@ -475,9 +476,10 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
         const distance=unit.position.distanceTo(approach);
         if(distance>1.35)moveToward(unit,approach,delta,time);
         else if(time>d.attackAt){
-          d.attackAt=time+1.2;castleIntegrity[enemySide]=Math.max(0,castleIntegrity[enemySide]-.12);
-          window.CrownGame?.onCastleDamage?.(enemySide,.12,castleIntegrity[enemySide]);
-          siegeImpact(enemySide,castleIntegrity[enemySide],.12);
+          const siegeDamage=d.kind==="knight"?.22:d.kind==="mage"?.18:d.kind==="archer"?.14:.12;
+          d.attackAt=time+1.2;castleIntegrity[enemySide]=Math.max(0,castleIntegrity[enemySide]-siegeDamage);
+          window.CrownGame?.onCastleDamage?.(enemySide,siegeDamage,castleIntegrity[enemySide]);
+          siegeImpact(enemySide,castleIntegrity[enemySide],siegeDamage);
         }
       }
     }
