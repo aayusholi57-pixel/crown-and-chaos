@@ -75,16 +75,14 @@
     for(const u of alive){
       u.attack=Math.max(0,u.attack-dt*3.5);u.hit=Math.max(0,u.hit-dt);
       const {unit:enemy,d}=nearestEnemy(u);
-      if(enemy && d<=u.range){
-        u.target=enemy;u.attack=Math.max(u.attack,0);
-        if(u.kind==="soldier"||u.kind==="knight"){
-          const face=enemy.x>=u.x?1:-1;u.facing=face;
-          if(d>u.range*.72)moveToward(u,enemy.x-face*u.range*.65,enemy.y,dt,u.speed);
-          else attack(u,enemy,now);
+      if(enemy){
+        u.target=enemy;u.facing=enemy.x>=u.x?1:-1;
+        if(d>u.range){
+          // Every troop actively closes the gap; ranged troops stop at their firing distance.
+          const standOff=u.kind==="soldier"||u.kind==="knight"?u.range*.62:u.range*.78;
+          moveToward(u,enemy.x-u.facing*standOff,enemy.y,dt,u.speed);
         }else{
-          u.facing=enemy.x>=u.x?1:-1;
-          if(d>u.range*.82)moveToward(u,enemy.x-u.facing*u.range*.7,enemy.y,dt,u.speed*.9);
-          else attack(u,enemy,now);
+          attack(u,enemy,now);
         }
       }else if(state.battle){
         u.target=null;
