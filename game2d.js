@@ -180,7 +180,7 @@
     const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
     if(state.battle){
       const hit=[...state.units].reverse().find(u=>Math.hypot(u.x-x,(u.y-32)-y)<25);
-      if(hit){state.selected=hit;window.CrownGame?.onUnitSelected({side:hit.side,kind:hit.kind});return;}
+      if(hit){state.selected=hit;window.CrownGame?.onUnitSelected({side:hit.side,kind:hit.kind});draw();return;}
       if(state.selected){state.selected.order={x:clamp(x,35,1165),y:clamp(y,ground-150,ground-5)};state.selected=null;}
       return;
     }
