@@ -221,7 +221,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
       const group = createCharacter(command);
       const pos = toWorld(command.points[0], width, height);
       group.position.set(pos.x, 0, pos.z);
-      group.rotation.y = command.side === "red" ? Math.PI / 2 : -Math.PI / 2;
+      group.rotation.y = command.side === "red" ? -Math.PI / 2 : Math.PI / 2;
       scene.add(group);
       units.set(command, group);
     });
@@ -237,7 +237,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     if (points.length < 2) return;
     group.rotation.y = command.side === "red" ? Math.PI / 2 : -Math.PI / 2;
     const length = points.reduce((sum, p, i) => i ? sum + Math.hypot(p.x - points[i - 1].x, p.z - points[i - 1].z) : 0, 0);
-    const duration = Math.max(900, Math.min(2400, length * 170));
+    const speedFactor = command.tool === "knight" ? 1.55 : command.tool === "archer" ? 1.2 : command.tool === "mage" ? .88 : 1;\n    const duration = Math.max(650, Math.min(2400, length * 170 / speedFactor));
     const started = performance.now();
     while (true) {
       const t = Math.min(1, (performance.now() - started) / duration);
@@ -258,17 +258,46 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     group.position.y = 0;
     group.userData.leftLeg.rotation.x = 0;
     group.userData.rightLeg.rotation.x = 0;
-    const pulse = new THREE.PointLight(command.tool === "mage" ? 0xa58cff : 0xffd28a, 0, 5);
+    const pulse = new THREE.PointLight(command.tool === "mage" ? 0xa58cff : command.tool === "knight" ? 0xff9c55 : 0xffd28a, 0, 7);
     pulse.position.copy(group.position).add(new THREE.Vector3(0, 1.2, 0));
     scene.add(pulse);
     const start = performance.now();
-    while (performance.now() - start < 500) {
-      const p = (performance.now() - start) / 500;
+    let special = null;
+    if (command.tool === "knight") {
+      special = new THREE.Mesh(new THREE.TorusGeometry(.55, .055, 8, 36), mat(0xffc16b, .2, .25, 0xff8b36));
+      special.rotation.x = -Math.PI / 2; special.position.copy(group.position); special.position.y = .12; scene.add(special);
+    } else if (command.tool === "soldier") {
+      special = new THREE.Mesh(new THREE.SphereGeometry(.9, 16, 12), new THREE.MeshBasicMaterial({ color: 0x9ed7ff, wireframe: true, transparent: true, opacity: .5 }));
+      special.position.copy(group.position).add(new THREE.Vector3(0, 1, 0)); scene.add(special);
+    } else if (command.tool === "mage") {
+      special = new THREE.Mesh(new THREE.IcosahedronGeometry(.5, 1), new THREE.MeshStandardMaterial({ color: 0xff9a48, emissive: 0xff4a12, emissiveIntensity: 2, roughness: .25 }));
+      special.position.copy(group.position).add(new THREE.Vector3(0, 7, 0)); scene.add(special);
+      const meteorLight = new THREE.PointLight(0xff6a25, 12, 9); special.add(meteorLight);
+    } else if (command.tool === "archer") {
+      special = new THREE.Group();
+      const arrowMat = mat(0xffdf9a, .45, .25, 0x9d641f);
+      for (let i = 0; i < 5; i++) {
+        const arrow = new THREE.Group();
+        cylinder(arrow, .025, .025, .75, arrowMat, 0, 0, 0, 5);
+        const tip = new THREE.Mesh(new THREE.ConeGeometry(.08, .22, 5), arrowMat);
+        tip.position.y = .46; arrow.add(tip);
+        arrow.position.set(group.position.x + (i - 2) * .22, 3.2 + Math.abs(i - 2) * .18, group.position.z - .8);
+        special.add(arrow);
+      }
+      scene.add(special);
+    }
+    while (performance.now() - start < (command.tool === "mage" ? 850 : 520)) {
+      const p = Math.min(1, (performance.now() - start) / (command.tool === "mage" ? 850 : 520));
       pulse.intensity = Math.sin(p * Math.PI) * 8;
       group.scale.setScalar(group.userData.baseScale * (1 + Math.sin(p * Math.PI) * .12));
+      if (special && command.tool === "knight") { special.scale.setScalar(1 + p * 3); special.material.opacity = 1 - p; special.material.transparent = true; }
+      if (special && command.tool === "soldier") { special.scale.setScalar(1 + p * .45); special.material.opacity = .5 * (1 - p); }
+      if (special && command.tool === "mage") special.position.y = 7 - p * 6.6;
+      if (special && command.tool === "archer") special.children.forEach(arrow => { arrow.position.y -= .045; arrow.position.z -= .09; });
       await sleep(16);
     }
     group.scale.setScalar(group.userData.baseScale);
+    if (special) scene.remove(special);
     scene.remove(pulse);
   }
 
