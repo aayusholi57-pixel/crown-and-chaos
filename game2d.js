@@ -8,7 +8,7 @@
   arena.appendChild(canvas);
   const ctx = canvas.getContext("2d");
   const W = 1200, H = 520, ground = 410;
-  const state = { active:"red", battle:false, units:[], projectiles:[], particles:[], selected:null, last:0, raf:0, accumulator:0, castle:{red:100,blue:100}, dimensions:{w:0,h:0}, difficulty:"warlord", commanders:{red:"DEPLOY",blue:"DEPLOY"}, aiClock:0, fps:60, frameSamples:0, frameTime:0 }; 
+  const state = { active:"red", battle:false, units:[], projectiles:[], particles:[], selected:null, last:0, raf:0, accumulator:0, statsClock:0, castle:{red:100,blue:100}, dimensions:{w:0,h:0}, difficulty:"warlord", commanders:{red:"DEPLOY",blue:"DEPLOY"}, aiClock:0, fps:60, frameSamples:0, frameTime:0 }; 
   const FIXED_DT=1/60, AI_INTERVAL={standard:.34,veteran:.24,warlord:.16};
   const GRID_SIZE=144, AI_RANGE=1080;
   const grid=new Map();
@@ -48,10 +48,10 @@
   }
   function setActiveSide(side){state.active=side;state.selected=null;}
   function removeArmy(side){state.units=state.units.filter(u=>u.side!==side);state.selected=null;draw();}
-  function resetArmies(){state.battle=false;state.units=[];state.projectiles=[];state.particles=[];state.selected=null;state.castle={red:100,blue:100};draw();}
+  function resetArmies(){state.battle=false;state.units=[];state.projectiles=[];state.particles=[];state.selected=null;state.castle={red:100,blue:100};state.commanders={red:"DEPLOY",blue:"DEPLOY"};state.accumulator=0;draw();}
   function beginBattle(){
     state.battle=true;
-    state.last=performance.now();
+    state.last=performance.now();state.accumulator=0;state.aiClock=0;rebuildSpatialGrid();
     // Clear deployment orders: once the invasion starts, both armies commit
     // to the frontline and then to the enemy stronghold.
     for(const u of state.units){u.order=null;u.target=null;u.lastAttack=0;}
@@ -254,6 +254,7 @@
       let steps=0;
       while(state.accumulator>=FIXED_DT&&steps<6){update(FIXED_DT,now);state.accumulator-=FIXED_DT;steps++;}
     }else state.accumulator=0;
+    state.statsClock+=elapsed;if(state.battle&&state.statsClock>=.25){state.statsClock=0;window.CrownGame?.onBattleStats(getStats());}
     state.frameSamples++;state.frameTime+=elapsed;
     if(state.frameTime>=1){state.fps=Math.round(state.frameSamples/state.frameTime);state.frameSamples=0;state.frameTime=0;}
     draw();state.raf=requestAnimationFrame(loop);
