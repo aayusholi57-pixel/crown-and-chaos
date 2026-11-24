@@ -58,3 +58,8 @@ This is a static site. Render should publish the repository root directly; there
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+
+## Open-ended army sizes
+
+The army-size control accepts any positive whole number rather than a fixed preset list. The default Quick Battle is 200 vs 200. Deployment formations adapt their columns and row spacing to the selected army size so large formations stay within the visible battlefield. The simulation no longer applies fixed projectile or particle count caps. Practical scale is bounded by the player's browser, CPU, memory, and graphics hardware rather than a game-imposed troop ceiling.
