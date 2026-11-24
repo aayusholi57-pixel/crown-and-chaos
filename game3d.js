@@ -274,7 +274,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     }
     castle.userData.damage = 100 - health;
     castle.children.forEach((part, i) => { if (part.material?.color && i % 2 === 0) { part.material.emissive = new THREE.Color(0x401b19); part.material.emissiveIntensity = (1 - health / 100) * .55; } });
-    if (showImpact) castle.position.x += side === "red" ? -.025 : .025;
+
     if (health <= 0 && !castle.userData.fallen) {
       castle.userData.fallen = true; const y = castle.position.y, started = performance.now();
       const collapse = () => { const t = Math.min(1, (performance.now() - started) / 1150); castle.rotation.z = (side === "red" ? -1 : 1) * t * .62; castle.position.y = y - t * .7; if (t < 1) requestAnimationFrame(collapse); };
@@ -365,6 +365,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     spear:new THREE.CylinderGeometry(.018,.018,.58,5),
     base:new THREE.CylinderGeometry(.2,.23,.045,8)
   };
+  const selectedBaseMaterial = new THREE.MeshStandardMaterial({color:0xf2d48e,emissive:0x8b6424,emissiveIntensity:.65});
   const troopMaterials = {
     red: new THREE.MeshStandardMaterial({color:0x9f3339,roughness:.62}),
     blue: new THREE.MeshStandardMaterial({color:0x315b9a,roughness:.62}),
@@ -393,7 +394,10 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     const startX=side==="red"?-5.9:5.9;
     group.position.set(startX+direction*col*.38,0,(row-(Math.ceil(count/cols)-1)/2)*.38);
     group.rotation.y=side==="red"?Math.PI/2:-Math.PI/2;
-    group.userData={side,kind,hp:3,selected:false,destination:null,target:null,attackAt:0,phase:index*.23,walking:false};
+    if(kind==="archer"){shield.visible=false;spear.visible=false;const bowCurve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(-.22,.24,.08),new THREE.Vector3(-.46,.5,.08),new THREE.Vector3(-.22,.76,.08));group.add(new THREE.Mesh(new THREE.TubeGeometry(bowCurve,10,.025,5,false),new THREE.MeshStandardMaterial({color:0x8a6037})));}
+    if(kind==="knight"){body.scale.set(1.2,1.15,1.2);head.scale.setScalar(1.08);}
+    if(kind==="mage"){shield.visible=false;spear.visible=false;const staff=new THREE.Mesh(troopGeometry.spear,troopMaterials.steel);staff.position.set(.22,.5,0);group.add(staff);const orb=new THREE.Mesh(new THREE.OctahedronGeometry(.11),new THREE.MeshStandardMaterial({color:0x9a83f5,emissive:0x6550db,emissiveIntensity:1.4}));orb.position.set(.22,.84,0);group.add(orb);}
+    group.userData={side,kind,hp:3,selected:false,destination:null,target:null,attackAt:0,phase:index*.23,walking:false,baseMaterial:base.material};
     group.traverse(obj=>{if(obj.isMesh){obj.userData.troop=group;pickables.push(obj);obj.castShadow=true;}});
     scene.add(group);battleUnits.push(group);return group;
   }
@@ -409,8 +413,8 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
   }
   function setActiveSide(side){activeSide=side;selectedUnit=null;}
   function selectTroop(unit){
-    if(selectedUnit){selectedUnit.userData.selected=false;}
-    selectedUnit=unit;unit.userData.selected=true;
+    if(selectedUnit){selectedUnit.userData.selected=false;selectedUnit.children[0].material=selectedUnit.userData.baseMaterial;}
+    selectedUnit=unit;unit.userData.selected=true;unit.children[0].material=selectedBaseMaterial;
     window.CrownGame?.onUnitSelected?.({side:unit.userData.side,kind:unit.userData.kind});
   }
   function groundPoint(event){
@@ -442,7 +446,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
       // Troops can cross the centre line and enter either kingdom's territory.
       selectedUnit.userData.destination=new THREE.Vector3(THREE.MathUtils.clamp(p.x,-8.2,8.2),0,THREE.MathUtils.clamp(p.z,-4.4,4.4));
       selectedUnit.userData.target=null;
-      selectedUnit.userData.selected=false;selectedUnit=null;
+      selectedUnit.userData.selected=false;selectedUnit.children[0].material=selectedUnit.userData.baseMaterial;selectedUnit=null;
     }
   });
   function beginBattle(){
