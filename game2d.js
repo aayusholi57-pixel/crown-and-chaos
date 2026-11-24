@@ -8,7 +8,11 @@
   arena.appendChild(canvas);
   const ctx = canvas.getContext("2d");
   const W = 1200, H = 520, ground = 410;
-  const state = { active:"red", battle:false, units:[], projectiles:[], particles:[], selected:null, last:0, raf:0, castle:{red:100,blue:100}, dimensions:{w:0,h:0} };
+  const state = { active:"red", battle:false, units:[], projectiles:[], particles:[], selected:null, last:0, raf:0, accumulator:0, castle:{red:100,blue:100}, dimensions:{w:0,h:0}, difficulty:"warlord", commanders:{red:"DEPLOY",blue:"DEPLOY"}, aiClock:0, fps:60, frameSamples:0, frameTime:0 }; 
+  const FIXED_DT=1/60, AI_INTERVAL={standard:.34,veteran:.24,warlord:.16};
+  const GRID_SIZE=144, AI_RANGE=1080;
+  const grid=new Map();
+  const cellKey=(x,y)=>Math.floor(x/GRID_SIZE)+":"+Math.floor(y/GRID_SIZE);
   const colors = { red:{main:"#bd514d",light:"#f1a49a",dark:"#632b31",metal:"#d7b18a"}, blue:{main:"#638ec2",light:"#b5d5f4",dark:"#263e62",metal:"#d9d8ce"} };
   const stats = {
     soldier:{hp:100,speed:105,range:34,damage:15,cooldown:720,color:"#d8d0bb"},
@@ -28,7 +32,7 @@
   }
   new ResizeObserver(resize).observe(arena); resize();
   function makeUnit(side,kind,x,y){
-    const s=stats[kind]; return {id:uid++,side,kind,x,y,homeX:x,homeY:y,hp:s.hp,maxHp:s.hp,speed:s.speed,range:s.range,damage:s.damage,cooldown:s.cooldown,lastAttack:rand(0,500),phase:rand(0,6.28),walk:0,attack:0,hit:0,dead:false,target:null,order:null,projectileClock:0};
+    const s=stats[kind]; return {id:uid++,side,kind,x,y,homeX:x,homeY:y,hp:s.hp,maxHp:s.hp,speed:s.speed,range:s.range,damage:s.damage,cooldown:s.cooldown,lastAttack:rand(0,500),phase:rand(0,6.28),walk:0,attack:0,hit:0,dead:false,target:null,order:null,projectileClock:0,brainClock:rand(0,.12),targetLane:0,role:kind==="archer"||kind==="mage"?"SUPPORT":"FRONTLINE"};
   }
   function deployArmy(side,count,kind){
     state.units=state.units.filter(u=>u.side!==side);
@@ -54,23 +58,39 @@
     if(!state.raf)state.raf=requestAnimationFrame(loop);
   }
   function distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
-  function nearestEnemy(u,targetLoads){
-    // Keep targets stable, but distribute fresh attackers across the enemy line.
-    if(u.target && !u.target.dead && u.target.side!==u.side){
-      return {unit:u.target,d:distance(u,u.target)};
+  function rebuildSpatialGrid(){
+    grid.clear();
+    for(const u of state.units){
+      if(u.dead)continue;
+      const key=cellKey(u.x,u.y);
+      let bucket=grid.get(key);if(!bucket){bucket=[];grid.set(key,bucket);}
+      bucket.push(u);
     }
-    let best=null,bestScore=Infinity,bestDistance=Infinity;
-    for(const enemy of state.units){
-      if(enemy.dead||enemy.side===u.side)continue;
-      const load=targetLoads.get(enemy)||0;
-      const d=distance(u,enemy);
-      const score=d+load*82+Math.abs(u.y-enemy.y)*.12;
-      if(score<bestScore){best=enemy;bestScore=score;bestDistance=d;}
+  }
+  function nearbyEnemies(u){
+    const cx=Math.floor(u.x/GRID_SIZE),cy=Math.floor(u.y/GRID_SIZE),found=[];
+    // Expand rings until a hostile formation is found; this also lets distant
+    // armies acquire one another at the opening of a battle.
+    for(let ring=0;ring<=Math.ceil(AI_RANGE/GRID_SIZE);ring++){
+      for(let gx=cx-ring;gx<=cx+ring;gx++)for(let gy=cy-ring;gy<=cy+ring;gy++){
+        if(ring>0&&Math.abs(gx-cx)!==ring&&Math.abs(gy-cy)!==ring)continue;
+        const bucket=grid.get(gx+":"+gy);if(!bucket)continue;
+        for(const e of bucket)if(e.side!==u.side&&!e.dead)found.push(e);
+      }
+      if(found.length)break;
+    }
+    return found;
+  }
+  function chooseEnemy(u,targetLoads){
+    const candidates=nearbyEnemies(u);let best=null,bestScore=Infinity,bestDistance=Infinity;
+    for(const e of candidates){
+      const d=distance(u,e),load=targetLoads.get(e)||0;
+      const score=d+load*105+Math.abs(u.y-e.y)*.2;
+      if(score<bestScore){best=e;bestScore=score;bestDistance=d;}
     }
     if(best){
-      const load=targetLoads.get(best)||0;
-      targetLoads.set(best,load+1);
-      u.targetLane=((load%5)-2)*13;
+      const load=targetLoads.get(best)||0;targetLoads.set(best,load+1);
+      u.targetLane=((load%5)-2)*12;
     }
     return {unit:best,d:bestDistance};
   }
@@ -87,60 +107,80 @@
     if(now-u.lastAttack<u.cooldown)return;
     u.lastAttack=now;u.attack=1;
     if(u.kind==="archer"||u.kind==="mage"){
-      state.projectiles.push({x:u.x+(u.side==="red"?14:-14),y:u.y-27,target,side:u.side,kind:u.kind,damage:u.damage,life:3});
+      if(state.projectiles.length<260)state.projectiles.push({x:u.x+(u.side==="red"?14:-14),y:u.y-27,target,side:u.side,kind:u.kind,damage:u.damage,life:3});
     }else{
       target.hp-=u.damage;target.hit=.18;
       burst(target.x,target.y-18,u.side==="red"?"#ef8b78":"#91c7f4",5);
       if(target.hp<=0)target.dead=true;
     }
   }
-  function burst(x,y,color,n=8){for(let i=0;i<n;i++)state.particles.push({x,y,vx:rand(-65,65),vy:rand(-90,15),life:rand(.2,.55),max:.55,color});}
+  function burst(x,y,color,n=8){for(let i=0;i<n&&state.particles.length<700;i++)state.particles.push({x,y,vx:rand(-65,65),vy:rand(-90,15),life:rand(.2,.55),max:.55,color});}
   function update(dt,now){
-    const alive=state.units.filter(u=>!u.dead);
+    // AI decisions are staggered; physics and combat still update every fixed tick.
+    state.aiClock+=dt;
+    const decisionInterval=AI_INTERVAL[state.difficulty]||AI_INTERVAL.warlord;
     const targetLoads=new Map();
-    for(const ally of alive)if(ally.target&&!ally.target.dead)targetLoads.set(ally.target,(targetLoads.get(ally.target)||0)+1);
-    for(const u of alive){
-      u.attack=Math.max(0,u.attack-dt*3.5);u.hit=Math.max(0,u.hit-dt);
-      const {unit:enemy,d}=nearestEnemy(u,targetLoads);
-      if(enemy){
-        u.target=enemy;
-        u.facing=enemy.x>=u.x?1:-1;
-        const ranged=u.kind==="archer"||u.kind==="mage";
-        const standOff=ranged?u.range*.72:u.range*.72;
-        const contactDistance=ranged?standOff:u.range*.72;
-        if(d>contactDistance){
-          // March directly toward the opposing line; ranged troops hold behind it.
-          const tx=enemy.x-u.facing*contactDistance;
-          const ty=clamp(enemy.y+(u.targetLane||0),ground-145,ground-8);
-          moveToward(u,tx,ty,dt,u.speed);
-        }else{
-          attack(u,enemy,now);
+    for(const u of state.units)if(!u.dead&&u.target&&!u.target.dead)targetLoads.set(u.target,(targetLoads.get(u.target)||0)+1);
+    if(state.aiClock>=decisionInterval){
+      state.aiClock=0;rebuildSpatialGrid();
+      let redAlive=0,blueAlive=0;
+      for(const u of state.units)if(!u.dead){if(u.side==="red")redAlive++;else blueAlive++;}
+      state.commanders.red=blueAlive?"ENGAGE":"SIEGE";
+      state.commanders.blue=redAlive?"ENGAGE":"SIEGE";
+      for(const u of state.units){
+        if(u.dead||u.order)continue;
+        u.brainClock-=decisionInterval;
+        if(u.brainClock<=0||!u.target||u.target.dead){
+          const choice=chooseEnemy(u,targetLoads);
+          u.target=choice.unit;
+          u.brainClock=decisionInterval+rand(0,.08);
         }
+      }
+    }
+    for(const u of state.units){
+      if(u.dead)continue;
+      u.attack=Math.max(0,u.attack-dt*3.5);u.hit=Math.max(0,u.hit-dt);
+      if(u.order){
+        moveToward(u,u.order.x,u.order.y,dt);
+        if(Math.hypot(u.x-u.order.x,u.y-u.order.y)<5)u.order=null;
+        continue;
+      }
+      const enemy=u.target&&!u.target.dead?u.target:null;
+      if(enemy){
+        const d=distance(u,enemy),ranged=u.kind==="archer"||u.kind==="mage";
+        u.facing=enemy.x>=u.x?1:-1;
+        const standOff=ranged?u.range*.78:u.range*.78;
+        if(d>standOff){
+          const tx=enemy.x-u.facing*standOff;
+          const ty=clamp(enemy.y+(u.targetLane||0),ground-155,ground-8);
+          moveToward(u,tx,ty,dt,u.speed);
+        }else attack(u,enemy,now);
       }else if(state.battle){
-        u.target=null;
         const enemyCastle=u.side==="red"?1090:110;
-        const stop=u.side==="red"?enemyCastle-58:enemyCastle+58;
-        if(Math.abs(stop-u.x)>40)moveToward(u,stop,u.homeY,dt,u.speed);
+        const stop=u.side==="red"?enemyCastle-60:enemyCastle+60;
+        u.facing=u.side==="red"?1:-1;
+        if(Math.abs(stop-u.x)>42)moveToward(u,stop,u.homeY,dt,u.speed);
         else if(now-u.lastAttack>u.cooldown){
           u.lastAttack=now;u.attack=1;
-          state.castle[u.side==="red"?"blue":"red"]=Math.max(0,state.castle[u.side==="red"?"blue":"red"]-(u.kind==="knight"?3:1.6));
-          const hp=state.castle[u.side==="red"?"blue":"red"];
-          window.CrownGame?.onCastleDamage(u.side==="red"?"blue":"red",u.damage,hp);
+          const side=u.side==="red"?"blue":"red";
+          state.castle[side]=Math.max(0,state.castle[side]-(u.kind==="knight"?3:1.6));
+          window.CrownGame?.onCastleDamage(side,u.damage,state.castle[side]);
           burst(enemyCastle,ground-52,u.side==="red"?"#ef9b73":"#8ebcf0",4);
         }
-      }else if(u.order){moveToward(u,u.order.x,u.order.y,dt);if(Math.hypot(u.x-u.order.x,u.y-u.order.y)<4)u.order=null;}
-      else if(Math.abs(u.x-u.homeX)>3)moveToward(u,u.homeX,u.homeY,dt);
+      }else if(Math.abs(u.x-u.homeX)>3)moveToward(u,u.homeX,u.homeY,dt);
     }
-    for(const p of state.projectiles){
-      if(!p.target||p.target.dead){p.life=0;continue;}
+    for(let i=state.projectiles.length-1;i>=0;i--){
+      const p=state.projectiles[i];
+      if(!p.target||p.target.dead){state.projectiles.splice(i,1);continue;}
       const dx=p.target.x-p.x,dy=(p.target.y-24)-p.y,d=Math.hypot(dx,dy),step=(p.kind==="mage"?330:430)*dt;
-      if(d<step+7){p.target.hp-=p.damage;p.target.hit=.2;if(p.target.hp<=0)p.target.dead=true;burst(p.target.x,p.target.y-20,p.kind==="mage"?"#bd91ff":"#f4d69a",7);p.life=0;}
-      else{p.x+=dx/d*step;p.y+=dy/d*step;p.life-=dt;}
+      if(d<step+7){p.target.hp-=p.damage;p.target.hit=.2;if(p.target.hp<=0)p.target.dead=true;burst(p.target.x,p.target.y-20,p.kind==="mage"?"#bd91ff":"#f4d69a",7);state.projectiles.splice(i,1);}
+      else{p.x+=dx/d*step;p.y+=dy/d*step;p.life-=dt;if(p.life<=0)state.projectiles.splice(i,1);}
     }
-    state.projectiles=state.projectiles.filter(p=>p.life>0);
-    for(const p of state.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=150*dt;p.life-=dt;}
-    state.particles=state.particles.filter(p=>p.life>0);
-    state.units=state.units.filter(u=>!u.dead);
+    for(let i=state.particles.length-1;i>=0;i--){
+      const p=state.particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=150*dt;p.life-=dt;
+      if(p.life<=0)state.particles.splice(i,1);
+    }
+    for(let i=state.units.length-1;i>=0;i--)if(state.units[i].dead)state.units.splice(i,1);
   }
   function drawCastle(x,side){
     const c=colors[side], flip=side==="blue";
@@ -208,11 +248,15 @@
     for(const p of state.particles){ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
   }
   function loop(now){
-    const dt=Math.min(.04,(now-state.last)/1000||0);
-    state.last=now;
-    if(state.battle)update(dt,now);
-    draw();
-    state.raf=requestAnimationFrame(loop);
+    const elapsed=Math.min(.1,Math.max(0,(now-state.last)/1000||0));
+    state.last=now;state.accumulator=Math.min(.1,state.accumulator+elapsed);
+    if(state.battle){
+      let steps=0;
+      while(state.accumulator>=FIXED_DT&&steps<6){update(FIXED_DT,now);state.accumulator-=FIXED_DT;steps++;}
+    }else state.accumulator=0;
+    state.frameSamples++;state.frameTime+=elapsed;
+    if(state.frameTime>=1){state.fps=Math.round(state.frameSamples/state.frameTime);state.frameSamples=0;state.frameTime=0;}
+    draw();state.raf=requestAnimationFrame(loop);
   }
   function pointer(e){
     const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
@@ -228,7 +272,13 @@
   }
   canvas.addEventListener("pointerdown",pointer);
   if(!state.raf){state.last=performance.now();state.raf=requestAnimationFrame(loop);}
-  window.Crown2D={deployArmy,setActiveSide,beginBattle,removeArmy,resetArmies};
+  function setDifficulty(level){state.difficulty=["standard","veteran","warlord"].includes(level)?level:"warlord";}
+  function getStats(){
+    let red=0,blue=0;
+    for(const u of state.units)if(!u.dead){if(u.side==="red")red++;else blue++;}
+    return {red,blue,fps:state.fps,redPlan:state.commanders.red,bluePlan:state.commanders.blue,castle:{...state.castle},difficulty:state.difficulty};
+  }
+  window.Crown2D={deployArmy,setActiveSide,beginBattle,removeArmy,resetArmies,setDifficulty,getStats};
   // Keep the old controller interface intact while replacing its 3D renderer.
   window.Crown3D=window.Crown2D;
   draw();
