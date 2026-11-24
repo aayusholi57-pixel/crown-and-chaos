@@ -40,7 +40,7 @@
       <div class="arena-wrap">
         <div class="arena-top"><span>⚔ &nbsp; THE ASHEN PLAINS</span><span id="phaseLabel">RED COMMAND PHASE</span><span>☼ &nbsp; DAY <b id="dayNumber">01</b></span></div>
         <div class="arena" id="arena">
-          <div class="mountains"></div><div class="sun"></div>
+          <div id="threeStage" class="three-stage" aria-hidden="true"></div><div class="mountains"></div><div class="sun"></div>
           <div class="castle castle-red"><div class="flag">♛</div><div class="castle-body"></div></div>
           <div class="castle castle-blue"><div class="flag">♚</div><div class="castle-body"></div></div>
           <div class="battle-line"></div>
@@ -53,10 +53,10 @@
       <div class="command-panel">
         <div class="turn-info"><span class="turn-dot red" id="turnDot"></span><div><small id="turnLabel">RED KING'S TURN</small><strong id="toolLabel">Choose your formation</strong></div></div>
         <div class="tools" role="group" aria-label="Choose unit">
-          <button class="tool active" data-tool="soldier" aria-pressed="true"><span>⚔</span><small>SOLDIER</small></button>
-          <button class="tool" data-tool="archer" aria-pressed="false"><span>➶</span><small>ARCHER</small></button>
-          <button class="tool" data-tool="knight" aria-pressed="false"><span>♞</span><small>KNIGHT</small></button>
-          <button class="tool" data-tool="mage" aria-pressed="false"><span>✧</span><small>MAGE</small></button>
+          <button class="tool active" data-tool="soldier" aria-pressed="true"><span>⚔</span><small>SOLDIER</small><em>SHIELD GUARD</em></button>
+          <button class="tool" data-tool="archer" aria-pressed="false"><span>➶</span><small>ARCHER</small><em>ARROW VOLLEY</em></button>
+          <button class="tool" data-tool="knight" aria-pressed="false"><span>♞</span><small>KNIGHT</small><em>IRON CHARGE</em></button>
+          <button class="tool" data-tool="mage" aria-pressed="false"><span>✧</span><small>MAGE</small><em>METEOR</em></button>
         </div>
         <div class="command-actions"><button class="text-btn" id="undoBtn">↶ UNDO</button><button class="primary-btn fight-btn" id="advanceBtn"><span>END RED TURN</span><b>↗</b></button></div>
       </div>
@@ -71,6 +71,6 @@
     </div>
   </div>
   <div class="result-overlay hidden" id="resultOverlay"><div class="result-card"><div class="eyebrow">THE DUST HAS SETTLED</div><div class="crown">♛</div><h2 id="resultTitle">VICTORY</h2><p id="resultText">The kingdom remembers your name.</p><button class="primary-btn" id="playAgain"><span>FIGHT AGAIN</span><b>↻</b></button></div></div>
-  <script src="game.js"></script>
+  <script type="module" src="game3d.js"></script>\n  <script src="game.js"></script>
 </body>
 </html>
