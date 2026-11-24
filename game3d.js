@@ -237,7 +237,8 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     if (points.length < 2) return;
     group.rotation.y = command.side === "red" ? Math.PI / 2 : -Math.PI / 2;
     const length = points.reduce((sum, p, i) => i ? sum + Math.hypot(p.x - points[i - 1].x, p.z - points[i - 1].z) : 0, 0);
-    const speedFactor = command.tool === "knight" ? 1.55 : command.tool === "archer" ? 1.2 : command.tool === "mage" ? .88 : 1;\n    const duration = Math.max(650, Math.min(2400, length * 170 / speedFactor));
+    const speedFactor = command.tool === "knight" ? 1.55 : command.tool === "archer" ? 1.2 : command.tool === "mage" ? .88 : 1;
+    const duration = Math.max(650, Math.min(2400, length * 170 / speedFactor));
     const started = performance.now();
     while (true) {
       const t = Math.min(1, (performance.now() - started) / duration);
