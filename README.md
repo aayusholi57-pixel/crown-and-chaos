@@ -1,76 +1,59 @@
 # Crown & Chaos — The Last Throne
 
-A browser-based 2D side-view two-kingdom strategy battle. Deploy 10, 50, or 100 individual troops, command them by clicking the battlefield, invade enemy territory, and destroy the opposing stronghold.
-
-![Crown & Chaos](https://img.shields.io/badge/genre-strategy%20battle-c7a66a) ![Vanilla JS](https://img.shields.io/badge/stack-HTML%20%2F%20CSS%20%2F%20JS-5b87b7) ![License](https://img.shields.io/badge/license-MIT-green)
+A browser-based **2D side-view kingdom battle**. The Crimson army starts on the left, the Azure army on the right. When war begins, both armies march toward the centre, meet at the frontline, fight hand-to-hand, and the surviving army advances to destroy the enemy castle.
 
 ## Play
 
-Play the live game: **[Crown & Chaos on Render](https://crown-and-chaos.onrender.com)**.
+[Play Crown & Chaos on Render](https://crown-and-chaos.onrender.com)
+
+## Battle flow
+
+1. Choose 10, 50, or 100 troops for the Crimson kingdom and deploy them on the left.
+2. Choose the Azure kingdom's army and deploy it on the right.
+3. Start the invasion. Both armies automatically march toward each other.
+4. Soldiers and knights engage at close range with animated weapon swings. Archers and mages support from behind with ranged projectiles.
+5. Units distribute their targets across the enemy line to reduce pile-ups.
+6. When one army is defeated, the surviving army advances to the enemy castle and attacks it until its integrity reaches zero.
+7. The game announces the winner when the opposing stronghold falls.
 
 ## Features
 
-- Cinematic medieval-fantasy landing screen with a animated 2D side-view battlefield
-- Local two-player, hot-seat gameplay
-- Army deployment: choose 10, 50, or 100 soldiers per kingdom
-- Individual click-to-command controls: select a soldier, then click a destination or enemy
-- Troops automatically form ranks inside their own kingdom and can cross into enemy territory
-- Readable 2D fighters with visible heads, bodies, articulated arms, hands, shields, and weapons
-- Animated marching, melee weapon swings, archer projectiles, and mage bolts
-- Side-view battlefield inspired by classic lane-based stick-war strategy games
-- Autonomous battlefield AI: soldiers seek nearby enemies, fight, advance, and besiege the opposing castle
-- Four stylized 3D hero classes: shield-bearing Soldier, bow-wielding Archer, mounted Knight, and arcane Mage
-- Alternating Red and Blue command phases
-- Animated marching, melee swings, ranged projectiles, siege impacts, castle integrity bars, and victory screen
-- Restrained red impact sparks and dust (non-graphic; no gore)
-- Synthesized sound effects with a mute toggle
-- Responsive layout and reduced-motion accessibility support
-- No backend, build step, dependencies, or API keys
+- Pure HTML, CSS, and JavaScript; no framework, package installation, backend, API key, or build step required
+- Canvas-based 2D side-view battlefield
+- Two opposing kingdoms with clear red/blue identity and castles
+- Army sizes: 10, 50, or 100 units per side
+- Four troop classes: Soldier, Archer, Knight, and Mage
+- Visible heads, torsos, arms, hands, shields, weapons, and health bars
+- Animated marching, melee attacks, arrows, magic bolts, hit effects, and siege damage
+- Stable target selection and target-load balancing to keep the frontline distributed
+- Automatic post-battle march toward the enemy stronghold
+- Responsive interface and reduced-motion accessibility support
 
 ## Run locally
 
-Open `index.html` in a modern browser, or start a local static server:
+Open `index.html` in a modern browser, or run:
 
 ```bash
 python -m http.server 8000
 ```
 
-Visit http://localhost:8000.
+Then visit http://localhost:8000.
 
-## How to play
+## Controls
 
-1. Click **Enter the Battle**.
-2. Choose 10, 50, or 100 soldiers and select a troop class.
-3. Click **Deploy Army**. Troops form ranks automatically inside your kingdom.
-4. Click an individual soldier, then click a destination or enemy target. Soldiers can cross into the opposing kingdom.
-5. Click **End Red Deployment** and deploy the Azure army.
-6. Click **Begin the Invasion**. Both armies advance, engage nearby enemies, and besiege the opposing stronghold.
-7. Destroy the enemy castle to win.
-
-### Unit strengths
-
-| Unit | Damage | Role |
-| --- | ---: | --- |
-| Soldier | 12 | Balanced frontline |
-| Archer | 15 | High-damage ranged unit |
-| Knight | 21 | Heavy assault |
-| Mage | 18 | Arcane strike |
-
-Troop classes have different movement speeds and battlefield silhouettes. Soldiers automatically seek nearby enemies during combat and attack the opposing castle when they reach its walls.
+During deployment, select a troop class and army size, then click **Deploy Army**. The two kingdoms deploy in separate territories. Once the Blue army is deployed, click **Begin the Invasion**. During battle, click a soldier to select it and click a destination to issue an order.
 
 ## Project structure
 
-- `index.html` — semantic game interface and overlays
-- `styles.css` — responsive visual system, battlefield, and animations
-- `game.js` — pointer input, turn flow, hero powers, combat, and sound\n- `game2d.js` — Canvas renderer, animated 2D troops, frontline AI, projectiles, and siege logic\n- `game3d.js` — retained legacy 3D prototype (not loaded by the game)
-- `LICENSE` — MIT License
+- `index.html` — game interface and overlays
+- `styles.css` — responsive styling
+- `game.js` — deployment turns, controls, sound, and victory UI
+- `game2d.js` — active 2D canvas renderer, troop AI, combat, projectiles, and castle siege
+- `game3d.js` — legacy prototype; not loaded by the game
 
-## Deploy on Render\n\nThe project is deployed as a Render Static Site. The site publishes the repository root and loads Three.js from jsDelivr. Pushes to the connected repository can be deployed from the [Render service dashboard](https://dashboard.render.com/static/srv-dc2idcks728c73ampg80).\n\n## Deploy with GitHub Pages
+## Deployment
 
-1. Open repository **Settings → Pages**.
-2. Under **Build and deployment**, choose **Deploy from a branch**.
-3. Select branch **main** and folder **/(root)**, then save.
-4. Wait for the Pages deployment, then open the Play link above.
+This is a static site. Render should publish the repository root directly; there is no build command and no `dist` directory. Pushes to `main` should trigger the connected Render static-site deployment.
 
 ## License
 
