@@ -218,6 +218,7 @@
         $(enemy + "Status").textContent = "Shield absorbed part of the strike!";
       }
       state.health[enemy] = Math.max(0, state.health[enemy] - damage);
+      if (window.Crown3D?.supported) window.Crown3D.siegeImpact(enemy, state.health[enemy], damage);
       if (command.tool === "soldier") {
         state.guard[command.side] = true;
         $(command.side + "Status").textContent = "Shield Guard ready · next hit reduced";
