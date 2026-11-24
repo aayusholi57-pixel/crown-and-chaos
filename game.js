@@ -99,8 +99,8 @@
     $("turnLabel").textContent = state.phase === "battle" ? "BATTLE IN PROGRESS" : state.turn.toUpperCase() + " KING'S TURN";
     $("turnDot").className = "turn-dot " + state.turn;
     $("toolLabel").textContent = state.phase === "battle" ? "The armies are clashing" : state.commands[state.turn].length >= 3 ? "Command limit reached" : unitStats[state.tool].power + " · " + unitStats[state.tool].description;
-    $("redStatus").textContent = redCount + "/3 commands issued" + (redActive ? " · commanding" : "");
-    $("blueStatus").textContent = blueCount + "/3 commands issued" + (blueActive ? " · commanding" : "");
+    $("redStatus").textContent = redCount + "/3 commands issued" + (redActive ? " · commanding" : "") + (state.guard.red ? " · SHIELD READY" : "");
+    $("blueStatus").textContent = blueCount + "/3 commands issued" + (blueActive ? " · commanding" : "") + (state.guard.blue ? " · SHIELD READY" : "");
     $("redHealth").style.width = state.health.red + "%";
     $("blueHealth").style.width = state.health.blue + "%";
     $("roundNumber").textContent = String(state.round).padStart(2, "0");
