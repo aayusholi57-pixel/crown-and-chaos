@@ -461,7 +461,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
       if(target&&target.userData.hp>0){
         const distance=unit.position.distanceTo(target.position);
         if(distance>.48){moveToward(unit,target.position,delta,time);}
-        else if(time>d.attackAt){target.userData.hp-=1;d.attackAt=time+.9;if(target.userData.hp<=0){scene.remove(target);target.userData.hp=0;}}
+        else if(time>d.attackAt){target.userData.hp-=1;d.attackAt=time+.9;if(target.userData.hp<=0){target.traverse(obj=>{const pickIndex=pickables.indexOf(obj);if(pickIndex>=0)pickables.splice(pickIndex,1);});scene.remove(target);target.userData.hp=0;}}
         continue;
       }
       if(d.destination){const distance=unit.position.distanceTo(d.destination);if(distance>.14)moveToward(unit,d.destination,delta,time);else d.destination=null;}
