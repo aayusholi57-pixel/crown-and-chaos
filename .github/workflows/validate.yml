@@ -23,6 +23,8 @@ jobs:
         run: |
           grep -q 'src="game2d.js"' index.html
           grep -q 'src="game.js"' index.html
+          grep -q 'id="quickBattleBtn"' index.html
+          grep -q 'quickBattleBtn' game.js
           ! grep -q 'src="game3d.js"' index.html
       - name: Verify static site entry point
         run: test -s index.html && test -s styles.css
