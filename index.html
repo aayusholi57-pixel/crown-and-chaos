@@ -23,7 +23,7 @@
       <div class="eyebrow"><span></span> A KINGDOM WILL FALL <span></span></div>
       <h1>THE LAST<br><em>THRONE</em></h1>
       <p class="intro-copy">Two rival kingdoms. Intelligent commanders. Living armies.<br>Build your force, choose its doctrine, and watch the battlefield evolve.</p>
-      <div class="intro-actions"><button class="primary-btn" id="beginBtn"><span>ENTER THE BATTLE</span><b>↗</b></button><button class="quick-btn" id="quickBattleBtn">QUICK BATTLE · 10 VS 10</button></div>
+      <div class="intro-actions"><button class="primary-btn" id="beginBtn"><span>ENTER THE BATTLE</span><b>↗</b></button><button class="quick-btn" id="quickBattleBtn">QUICK BATTLE · 200 VS 200</button></div>
       <div class="intro-foot"><span>✦</span> NO DESTINY. ONLY STRATEGY. <span>✦</span></div>
     </section>
 
@@ -58,15 +58,15 @@
           <button class="tool" data-tool="knight" aria-pressed="false"><span>♞</span><small>KNIGHT</small><em>IRON CHARGE</em></button>
           <button class="tool" data-tool="mage" aria-pressed="false"><span>✧</span><small>MAGE</small><em>METEOR</em></button>
         </div>
-        <div class="command-actions"><label class="troop-picker" for="troopCount">ARMY SIZE <select id="troopCount"><option value="10">10 SOLDIERS</option><option value="50">50 SOLDIERS</option><option value="100">100 SOLDIERS</option></select></label><label class="ai-picker" for="aiDifficulty">AI DOCTRINE <select id="aiDifficulty"><option value="standard">STANDARD</option><option value="veteran">VETERAN</option><option value="warlord" selected>WARLORD</option></select></label><button class="text-btn" id="deployBtn">DEPLOY ARMY</button><button class="text-btn" id="undoBtn">↶ WITHDRAW</button><button class="primary-btn fight-btn" id="advanceBtn"><span>END RED DEPLOYMENT</span><b>↗</b></button></div>
+        <div class="command-actions"><label class="troop-picker" for="troopCount">TROOPS PER KINGDOM <input id="troopCount" type="number" inputmode="numeric" min="1" step="1" value="200" aria-label="Troops per kingdom"></label><label class="ai-picker" for="aiDifficulty">AI DOCTRINE <select id="aiDifficulty"><option value="standard">STANDARD</option><option value="veteran">VETERAN</option><option value="warlord" selected>WARLORD</option></select></label><button class="text-btn" id="deployBtn">DEPLOY ARMY</button><button class="text-btn" id="undoBtn">↶ WITHDRAW</button><button class="primary-btn fight-btn" id="advanceBtn"><span>END RED DEPLOYMENT</span><b>↗</b></button></div>
       </div>
-      <div class="battle-notice" id="battleNotice" role="status" aria-live="polite">Choose 10, 50, or 100 troops and deploy your first formation.</div><div class="game-footer"><button class="text-btn" id="resetBtn">↻ RESTART GAME</button><span>THE CROWN IS EARNED, NEVER GIVEN.</span><button class="text-btn" id="howBtn">HOW TO PLAY ?</button></div>
+      <div class="battle-notice" id="battleNotice" role="status" aria-live="polite">Enter any positive army size and deploy your first formation.</div><div class="game-footer"><button class="text-btn" id="resetBtn">↻ RESTART GAME</button><span>THE CROWN IS EARNED, NEVER GIVEN.</span><button class="text-btn" id="howBtn">HOW TO PLAY ?</button></div>
     </section>
   </main>
 
   <div class="modal hidden" id="modal" role="dialog" aria-modal="true" aria-labelledby="manualTitle">
     <div class="modal-card"><button class="close-modal" id="closeModal" aria-label="Close">×</button><div class="eyebrow small">FIELD MANUAL</div><h2 id="manualTitle">HOW TO <em>CONQUER</em></h2>
-      <ol><li>Choose an army size: <b>10, 50, or 100 soldiers</b>, then select a troop class.</li><li>Deploy your army. Soldiers automatically form ranks inside your kingdom.</li><li>Both armies move and fight automatically. Optional: click one of your soldiers, then click a destination to override its movement.</li><li>Blue deploys its army in the Azure territory. Click <b>BEGIN THE INVASION</b>, or use Quick Battle to skip setup.</li><li>Both armies advance, engage nearby enemies, and attack the opposing stronghold. Destroy the enemy castle to win.</li></ol>
+      <ol><li>Choose an army size: <b>any positive number of soldiers</b>, then select a troop class.</li><li>Deploy your army. Soldiers automatically form ranks inside your kingdom.</li><li>Both armies move and fight automatically. Optional: click one of your soldiers, then click a destination to override its movement.</li><li>Blue deploys its army in the Azure territory. Click <b>BEGIN THE INVASION</b>, or use Quick Battle to skip setup.</li><li>Both armies advance, engage nearby enemies, and attack the opposing stronghold. Destroy the enemy castle to win.</li></ol>
       <p class="hint">BATTLEFIELD COMMAND: select an individual soldier and click a destination. Troops can enter either kingdom. During battle, units automatically seek nearby enemies, fight in formation, and besiege the enemy castle. Soldier, Archer, Knight, and Mage formations have different movement speeds. A stronghold reaching zero integrity collapses and ends the battle.</p><button class="primary-btn" id="gotIt"><span>UNDERSTOOD</span><b>↗</b></button>
     </div>
   </div>
