@@ -37,11 +37,14 @@
   function deployArmy(side,count,kind){
     state.units=state.units.filter(u=>u.side!==side);
     const start=side==="red"?135:1065, dir=side==="red"?1:-1;
-    const cols=Math.min(10,Math.ceil(Math.sqrt(count)*1.55));
+    const cols=Math.max(1,Math.ceil(Math.sqrt(count*2)));
+    const rows=Math.ceil(count/cols);
+    const colGap=Math.min(22,410/Math.max(1,cols-1));
+    const rowGap=Math.min(26,150/Math.max(1,rows-1));
     for(let i=0;i<count;i++){
       const row=Math.floor(i/cols), col=i%cols;
-      const x=start+dir*(col*23+rand(-4,4));
-      const y=ground-22-row*28+rand(-4,4);
+      const x=start+dir*(col*colGap+rand(-2,2));
+      const y=ground-22-row*rowGap+rand(-2,2);
       state.units.push(makeUnit(side,kind,x,y));
     }
     state.active=side;state.selected=null;draw();
@@ -107,14 +110,14 @@
     if(now-u.lastAttack<u.cooldown)return;
     u.lastAttack=now;u.attack=1;
     if(u.kind==="archer"||u.kind==="mage"){
-      if(state.projectiles.length<260)state.projectiles.push({x:u.x+(u.side==="red"?14:-14),y:u.y-27,target,side:u.side,kind:u.kind,damage:u.damage,life:3});
+      state.projectiles.push({x:u.x+(u.side==="red"?14:-14),y:u.y-27,target,side:u.side,kind:u.kind,damage:u.damage,life:3});
     }else{
       target.hp-=u.damage;target.hit=.18;
       burst(target.x,target.y-18,u.side==="red"?"#ef8b78":"#91c7f4",5);
       if(target.hp<=0)target.dead=true;
     }
   }
-  function burst(x,y,color,n=8){for(let i=0;i<n&&state.particles.length<700;i++)state.particles.push({x,y,vx:rand(-65,65),vy:rand(-90,15),life:rand(.2,.55),max:.55,color});}
+  function burst(x,y,color,n=8){for(let i=0;i<n;i++)state.particles.push({x,y,vx:rand(-65,65),vy:rand(-90,15),life:rand(.2,.55),max:.55,color});}
   function update(dt,now){
     // AI decisions are staggered; physics and combat still update every fixed tick.
     state.aiClock+=dt;
