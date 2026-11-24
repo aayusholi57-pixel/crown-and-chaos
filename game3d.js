@@ -376,6 +376,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
   };
   const battleUnits=[];
   const pickables=[];
+  const combatProjectiles=[];
   const raycaster=new THREE.Raycaster();
   const pointer=new THREE.Vector2();
   const groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
@@ -417,7 +418,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
       const staff=new THREE.Mesh(new THREE.CylinderGeometry(.018,.025,.68,6),new THREE.MeshStandardMaterial({color:0x785437}));staff.position.y=.13;weapon.add(staff);
       const orb=new THREE.Mesh(new THREE.OctahedronGeometry(.095),new THREE.MeshStandardMaterial({color:0x9a83f5,emissive:0x6550db,emissiveIntensity:1.6}));orb.position.set(0,.51,0);weapon.add(orb);
     }else{
-      const blade=new THREE.Mesh(new THREE.CylinderGeometry(kind==="knight"?.035:.022,kind==="knight"?.045:.025,kind==="knight"?.72:.58,6),troopMaterials.steel);
+      const blade=new THREE.Mesh(new THREE.CylinderGeometry(kind==="knight" ? 0.035 : 0.022,kind==="knight" ? 0.045 : 0.025,kind==="knight" ? 0.72 : 0.58,6),troopMaterials.steel);
       blade.position.set(.06,.18,0);blade.rotation.z=-.35;weapon.add(blade);
       const grip=new THREE.Mesh(new THREE.BoxGeometry(.2,.045,.07),new THREE.MeshStandardMaterial({color:0x8d673b}));grip.position.set(0,-.05,0);weapon.add(grip);
     }
@@ -494,7 +495,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
   }
   function updateTroopAI(delta,time){
     for(const unit of battleUnits){
-      const d=unit.userData;if(d.hp<=0)continue;
+      const d=unit.userData;if(d.hp<=0)continue;d.walking=false;
       let target=d.target;
       if(!target||target.userData.hp<=0){
         d.target=null;let nearest=null,nearestDist=1.45;
@@ -505,7 +506,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
         const distance=unit.position.distanceTo(target.position);
         const reach=d.kind==="archer"?1.55:d.kind==="mage"?1.8:.48;
         if(distance>reach){moveToward(unit,target.position,delta,time);}
-        else if(time>d.attackAt){target.userData.hp-=d.kind==="knight"?2:d.kind==="mage"?1.5:1;d.attackAt=time+(d.kind==="archer" ? 0.95 : d.kind==="knight" ? 1.05 : 1.1);if(target.userData.hp<=0){target.traverse(obj=>{const pickIndex=pickables.indexOf(obj);if(pickIndex>=0)pickables.splice(pickIndex,1);});scene.remove(target);target.userData.hp=0;}}
+        else if(time>d.attackAt){target.userData.hp-=d.kind==="knight"?2:d.kind==="mage"?1.5:1;d.attackStarted=time;if(d.kind==="archer"||d.kind==="mage")spawnCombatProjectile(unit,target);d.attackAt=time+(d.kind==="archer" ? 0.95 : d.kind==="knight" ? 1.05 : 1.1);if(target.userData.hp<=0){target.traverse(obj=>{const pickIndex=pickables.indexOf(obj);if(pickIndex>=0)pickables.splice(pickIndex,1);});scene.remove(target);target.userData.hp=0;}}
         continue;
       }
       if(d.destination){const distance=unit.position.distanceTo(d.destination);if(distance>.14)moveToward(unit,d.destination,delta,time);else d.destination=null;}
@@ -522,6 +523,17 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
         }
       }
     }
+  }
+  function spawnCombatProjectile(unit,target){
+    const isMage=unit.userData.kind==="mage";
+    const material=isMage?new THREE.MeshStandardMaterial({color:0xa88aff,emissive:0x7957ff,emissiveIntensity:2}):troopMaterials.steel;
+    const mesh=new THREE.Mesh(isMage?new THREE.SphereGeometry(.09,8,7):new THREE.CylinderGeometry(.018,.018,.34,5),material);
+    if(!isMage){mesh.rotation.z=-Math.PI/2;const tip=new THREE.Mesh(new THREE.ConeGeometry(.045,.12,5),troopMaterials.steel);tip.position.x=.2;mesh.add(tip);}
+    mesh.position.copy(unit.position).add(new THREE.Vector3(0,.7,0));scene.add(mesh);
+    combatProjectiles.push({mesh,target,start:mesh.position.clone(),created:clock.elapsedTime,duration:.32});
+  }
+  function animateCombatProjectiles(time){
+    for(let i=combatProjectiles.length-1;i>=0;i--){const p=combatProjectiles[i];if(!p.target.parent||p.target.userData.hp<=0){scene.remove(p.mesh);combatProjectiles.splice(i,1);continue;}const t=Math.min(1,(time-p.created)/p.duration);const end=p.target.position.clone().add(new THREE.Vector3(0,.55,0));p.mesh.position.lerpVectors(p.start,end,t);p.mesh.position.y+=Math.sin(t*Math.PI)*.18;if(t>=1){scene.remove(p.mesh);combatProjectiles.splice(i,1);}}
   }
   function moveToward(unit,target,delta,time){
     const d=unit.userData;const dx=target.x-unit.position.x,dz=target.z-unit.position.z;
@@ -555,6 +567,24 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
       }
     }
     updateTroopAI(delta,t);
+    animateCombatProjectiles(t);
+    for(const unit of battleUnits){
+      const d=unit.userData;if(d.hp<=0)continue;
+      const walk=Math.sin(t*10+d.phase);
+      const attackProgress=(t-d.attackStarted)/.38;
+      const attacking=attackProgress>=0&&attackProgress<=1;
+      const swing=attacking?Math.sin(attackProgress*Math.PI):0;
+      d.leftLeg.rotation.x=d.walking?walk*.55:0;
+      d.rightLeg.rotation.x=d.walking?-walk*.55:0;
+      d.leftArm.rotation.z=(d.walking?-walk*.22:0)+(attacking?-.55*swing:0);
+      d.rightArm.rotation.z=(d.walking?walk*.22:0)+(attacking?1.35*swing:0);
+      d.rightArm.rotation.x=attacking?-.15*swing:0;
+      d.leftArm.rotation.x=d.selected?-.25:0;
+      d.aura.material.opacity=d.selected?.85:.28+Math.sin(t*2+d.phase)*.08;
+      if(attacking)unit.rotation.z=-.06*swing;
+      else unit.rotation.z=0;
+      unit.position.y=d.walking?Math.abs(walk)*.035:0;
+    }
     renderer.render(scene, camera);
     requestAnimationFrame(render);
   }
