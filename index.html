@@ -15,14 +15,14 @@
   <div class="grain" aria-hidden="true"></div>
   <header class="topbar">
     <a class="brand" href="#" aria-label="Crown and Chaos home"><span class="brand-mark">♜</span><span>CROWN <i>&</i> CHAOS</span></a>
-    <div class="top-meta"><span class="live-dot"></span> THE LAST KINGDOMS <span class="divider">/</span> SEASON I</div>
+    <div class="top-meta"><span class="live-dot"></span> AUTONOMOUS WARFARE <span class="divider">/</span> SEASON I</div>
     <button class="sound-toggle" id="soundToggle" aria-label="Turn sound off">♫ <span>SOUND ON</span></button>
   </header>
   <main>
     <section class="intro" id="intro">
       <div class="eyebrow"><span></span> A KINGDOM WILL FALL <span></span></div>
       <h1>THE LAST<br><em>THRONE</em></h1>
-      <p class="intro-copy">Two kingdoms. Living armies. 10, 50, or 100 soldiers.<br>Deploy your forces—or jump straight into an automatic battle.</p>
+      <p class="intro-copy">Two rival kingdoms. Intelligent commanders. Living armies.<br>Build your force, choose its doctrine, and watch the battlefield evolve.</p>
       <div class="intro-actions"><button class="primary-btn" id="beginBtn"><span>ENTER THE BATTLE</span><b>↗</b></button><button class="quick-btn" id="quickBattleBtn">QUICK BATTLE · 10 VS 10</button></div>
       <div class="intro-foot"><span>✦</span> NO DESTINY. ONLY STRATEGY. <span>✦</span></div>
     </section>
@@ -38,7 +38,7 @@
         <div class="king-card blue-card"><div class="king-symbol">♚</div><div><small>THE AZURE REALM</small><strong>BLUE KING</strong><span id="blueStatus">Ready to command</span></div><div class="health"><i id="blueHealth"></i></div></div>
       </div>
       <div class="arena-wrap">
-        <div class="arena-top"><span>⚔ &nbsp; THE ASHEN PLAINS</span><span id="phaseLabel">RED COMMAND PHASE</span><span>☼ &nbsp; DAY <b id="dayNumber">01</b></span></div>
+        <div class="arena-top"><span>⚔ &nbsp; THE ASHEN PLAINS</span><span id="phaseLabel">RED COMMAND PHASE</span><span>◈ &nbsp; COMMANDER AI <b id="aiStatus">WARLORD</b></span></div>
         <div class="arena" id="arena">
           <div id="threeStage" class="three-stage" aria-hidden="true"></div><div class="mountains"></div><div class="sun"></div>
           <div class="castle castle-red"><div class="flag">♛</div><div class="castle-body"></div></div>
@@ -48,7 +48,7 @@
           <div class="arena-caption" id="arenaCaption">DEPLOY YOUR TROOPS INSIDE YOUR KINGDOM</div>
           <div class="combat-flash" id="combatFlash"></div>
         </div>
-        <div class="arena-bottom"><span>ARMIES MOVE AND FIGHT AUTOMATICALLY</span><span>INVADE · ENGAGE · BESIEGE</span></div>
+        <div class="arena-bottom"><span id="armyTelemetry">RED 0 · BLUE 0</span><span id="planTelemetry">AUTONOMOUS COMMAND · ENGAGE · BESIEGE</span></div>
       </div>
       <div class="command-panel">
         <div class="turn-info"><span class="turn-dot red" id="turnDot"></span><div><small id="turnLabel">RED KING'S DEPLOYMENT</small><strong id="toolLabel">Choose your army size</strong></div></div>
@@ -58,7 +58,7 @@
           <button class="tool" data-tool="knight" aria-pressed="false"><span>♞</span><small>KNIGHT</small><em>IRON CHARGE</em></button>
           <button class="tool" data-tool="mage" aria-pressed="false"><span>✧</span><small>MAGE</small><em>METEOR</em></button>
         </div>
-        <div class="command-actions"><label class="troop-picker" for="troopCount">ARMY SIZE <select id="troopCount"><option value="10">10 SOLDIERS</option><option value="50">50 SOLDIERS</option><option value="100">100 SOLDIERS</option></select></label><button class="text-btn" id="deployBtn">DEPLOY ARMY</button><button class="text-btn" id="undoBtn">↶ WITHDRAW</button><button class="primary-btn fight-btn" id="advanceBtn"><span>END RED DEPLOYMENT</span><b>↗</b></button></div>
+        <div class="command-actions"><label class="troop-picker" for="troopCount">ARMY SIZE <select id="troopCount"><option value="10">10 SOLDIERS</option><option value="50">50 SOLDIERS</option><option value="100">100 SOLDIERS</option></select></label><label class="ai-picker" for="aiDifficulty">AI DOCTRINE <select id="aiDifficulty"><option value="standard">STANDARD</option><option value="veteran">VETERAN</option><option value="warlord" selected>WARLORD</option></select></label><button class="text-btn" id="deployBtn">DEPLOY ARMY</button><button class="text-btn" id="undoBtn">↶ WITHDRAW</button><button class="primary-btn fight-btn" id="advanceBtn"><span>END RED DEPLOYMENT</span><b>↗</b></button></div>
       </div>
       <div class="battle-notice" id="battleNotice" role="status" aria-live="polite">Choose 10, 50, or 100 troops and deploy your first formation.</div><div class="game-footer"><button class="text-btn" id="resetBtn">↻ RESTART GAME</button><span>THE CROWN IS EARNED, NEVER GIVEN.</span><button class="text-btn" id="howBtn">HOW TO PLAY ?</button></div>
     </section>
