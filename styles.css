@@ -55,3 +55,10 @@ canvas#battleCanvas{pointer-events:none;z-index:4}
  .troop-picker select{flex:1;max-width:190px}
  .three-stage canvas{touch-action:manipulation}
 }
+
+
+/* 2D battlefield renderer */
+#threeStage{z-index:3;pointer-events:none;background:transparent}
+#battle2d{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:4;pointer-events:auto;touch-action:none;cursor:crosshair}
+.arena .mountains,.arena .sun,.arena .castle,.arena .battle-line{opacity:0;pointer-events:none}
+.arena-caption{z-index:5}
