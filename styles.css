@@ -27,3 +27,14 @@ canvas#battleCanvas{z-index:4;background:transparent}
 @media(prefers-reduced-motion:reduce){
   .three-stage{opacity:.92}
 }
+
+/* Siege-era presentation polish */
+.arena-wrap{border-color:#c7a66a77;box-shadow:0 24px 85px #000a,inset 0 0 0 1px #ffffff08}
+.arena{background:linear-gradient(180deg,#18212d 0%,#343b43 36%,#5c493d 37%,#2c2526 100%)}
+.arena:before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,#4a1c1c18,transparent 45%,#1b345318),linear-gradient(180deg,transparent 60%,#0d0b0dcc)}
+.three-stage{position:absolute;inset:0;z-index:1;pointer-events:none}
+.three-stage canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.battle-line{z-index:2}.arena-caption{z-index:4;text-shadow:0 2px 8px #000}
+.command-panel{box-shadow:0 18px 45px #0004}.tool{min-width:68px}.tool em{font-size:6px;font-style:normal;letter-spacing:.6px;color:#bca77f}
+@media(max-width:650px){.arena-bottom span:last-child{display:none}.tool{min-width:58px}.tool em{font-size:5px}}
+@media(prefers-reduced-motion:reduce){.arena-wrap,.tool,.primary-btn{transition:none}}
