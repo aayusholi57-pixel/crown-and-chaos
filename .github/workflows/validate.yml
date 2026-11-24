@@ -1,0 +1,21 @@
+name: Validate Crown & Chaos
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check classic game logic
+        run: node --check game.js
+      - name: Check Three.js ES module syntax
+        run: node --input-type=module --check < game3d.js
