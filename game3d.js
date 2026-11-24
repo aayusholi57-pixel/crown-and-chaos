@@ -6,6 +6,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
   if (!host || !window.WebGLRenderingContext) return;
 
   const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x24252d, 0.026);
   const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
   camera.position.set(0, 8.8, 17.5);
   camera.lookAt(0, 1.2, 0);
@@ -28,6 +29,9 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
   const rim = new THREE.PointLight(0x6f9fff, 38, 30);
   rim.position.set(5, 5, -4);
   scene.add(rim);
+  const warmFill = new THREE.PointLight(0xff8b52, 24, 24);
+  warmFill.position.set(-7, 3, 2);
+  scene.add(warmFill);
 
   const mat = (color, metalness = 0, roughness = .72, emissive = 0x000000) =>
     new THREE.MeshStandardMaterial({ color, metalness, roughness, emissive, emissiveIntensity: .55 });
@@ -95,9 +99,9 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     g.add(flag);
     g.position.set(x, 0, -1.4);
     scene.add(g);
+    return g;
   }
-  buildCastle(-7.1, "red");
-  buildCastle(7.1, "blue");
+  const castles = { red: buildCastle(-7.1, "red"), blue: buildCastle(7.1, "blue") };
 
   // Distant battlefield stones add depth without obscuring the command paths.
   for (let i = 0; i < 18; i++) {
@@ -107,6 +111,23 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     rock.scale.y = .45;
     rock.castShadow = true;
     scene.add(rock);
+  }
+
+  const ashMat = new THREE.MeshStandardMaterial({ color: 0x282329, roughness: 1 });
+  const emberMat = new THREE.MeshBasicMaterial({ color: 0xff8247 });
+  for (let i = 0; i < 26; i++) {
+    const x = (Math.random() - .5) * 16, z = (Math.random() - .5) * 7;
+    const patch = new THREE.Mesh(new THREE.CircleGeometry(.18 + Math.random() * .35, 9), ashMat);
+    patch.rotation.x = -Math.PI / 2; patch.position.set(x, -.105, z); patch.scale.set(1.5, .65, 1); scene.add(patch);
+    if (i % 4 === 0) { const ember = new THREE.Mesh(new THREE.SphereGeometry(.035, 6, 5), emberMat); ember.position.set(x + .12, .04, z - .08); scene.add(ember); }
+  }
+  const standards = [];
+  for (const side of ["red", "blue"]) {
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(.035, .045, 2.2, 7), goldMat);
+    const flag = new THREE.Mesh(new THREE.PlaneGeometry(.8, .42), new THREE.MeshStandardMaterial({ color: side === "red" ? 0x9f3339 : 0x315b9a, side: THREE.DoubleSide, roughness: .8 }));
+    const x = side === "red" ? -4.7 : 4.7;
+    pole.position.set(x, 1.05, -2.8); flag.position.set(x + (side === "red" ? .4 : -.4), 1.72, -2.8);
+    flag.rotation.y = side === "red" ? -.15 : .15; scene.add(pole, flag); standards.push({ flag, side });
   }
 
   const units = new Map();
@@ -227,6 +248,34 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     });
   }
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+  // Restrained red sparks and dust: cinematic impact feedback without graphic gore.
+  function siegeImpact(side, health, damage) {
+    const castle = castles[side]; if (!castle) return;
+    const origin = castle.position.clone().add(new THREE.Vector3(side === "red" ? 1.1 : -1.1, 1.1, .85));
+    const particles = [], palette = [0x9e302f, 0xc65a45, 0xe2a36b, 0x6b5550];
+    for (let i = 0; i < Math.min(24, 9 + Math.round(damage / 2)); i++) {
+      const p = new THREE.Mesh(new THREE.SphereGeometry(.035 + Math.random() * .045, 6, 5), new THREE.MeshBasicMaterial({ color: palette[i % palette.length], transparent: true, opacity: .9 }));
+      p.position.copy(origin); p.userData.v = new THREE.Vector3((Math.random() - .5) * .12, .04 + Math.random() * .12, (Math.random() - .5) * .12); scene.add(p); particles.push(p);
+    }
+    const light = new THREE.PointLight(0xff6a45, 8, 5); light.position.copy(origin); scene.add(light);
+    const start = performance.now(), duration = 620;
+    const tick = () => {
+      const t = Math.min(1, (performance.now() - start) / duration);
+      particles.forEach(p => { p.position.add(p.userData.v); p.userData.v.y -= .003; p.material.opacity = .9 * (1 - t); p.scale.setScalar(1 - t * .55); });
+      light.intensity = 8 * (1 - t);
+      if (t < 1) requestAnimationFrame(tick); else { particles.forEach(p => { scene.remove(p); p.geometry.dispose(); p.material.dispose(); }); scene.remove(light); }
+    };
+    requestAnimationFrame(tick);
+    castle.userData.damage = 100 - health;
+    castle.children.forEach((part, i) => { if (part.material?.color && i % 2 === 0) { part.material.emissive = new THREE.Color(0x401b19); part.material.emissiveIntensity = (1 - health / 100) * .55; } });
+    castle.position.x += side === "red" ? -.025 : .025;
+    if (health <= 0 && !castle.userData.fallen) {
+      castle.userData.fallen = true; const y = castle.position.y, started = performance.now();
+      const collapse = () => { const t = Math.min(1, (performance.now() - started) / 1150); castle.rotation.z = (side === "red" ? -1 : 1) * t * .62; castle.position.y = y - t * .7; if (t < 1) requestAnimationFrame(collapse); };
+      requestAnimationFrame(collapse);
+    }
+  }
   async function animateCommand(command, width, height) {
     let group = units.get(command);
     if (!group) {
@@ -329,9 +378,5 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
   resize();
   render();
 
-  window.Crown3D = {
-    sync,
-    animateCommand,
-    supported: true
-  };
+  window.Crown3D = { sync, animateCommand, siegeImpact, supported: true };
 })();
