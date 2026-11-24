@@ -15,7 +15,9 @@ Play the live game: **[Crown & Chaos on Render](https://crown-and-chaos.onrender
 - Draw-to-command controls with mouse, pen, or touch
 - Four stylized 3D hero classes: shield-bearing Soldier, bow-wielding Archer, mounted Knight, and arcane Mage
 - Alternating Red and Blue command phases
-- Animated 3D character movement, signature ability effects, combat damage, health bars, and victory screen
+- Animated 3D character movement, signature ability effects, siege-impact particles, damaged and collapsing strongholds, combat damage, health bars, and victory screen
+- Three deliberate orders per kingdom per round, with alternating command phases
+- Restrained red impact sparks and dust (non-graphic; no gore)
 - Synthesized sound effects with a mute toggle
 - Responsive layout and reduced-motion accessibility support
 - No backend, build step, dependencies, or API keys
