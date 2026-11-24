@@ -62,3 +62,11 @@ canvas#battleCanvas{pointer-events:none;z-index:4}
 #battle2d{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:4;pointer-events:auto;touch-action:none;cursor:crosshair}
 .arena .mountains,.arena .sun,.arena .castle,.arena .battle-line{opacity:0;pointer-events:none}
 .arena-caption{z-index:5}
+
+
+/* Quick-start battle entry */
+.intro-actions{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:30px}
+.intro-actions .primary-btn{margin-top:0}
+.quick-btn{border:1px solid #c7a66a66;background:#17141acc;color:#e6d2ad;padding:13px 20px;font:700 9px "DM Sans",sans-serif;letter-spacing:2px;cursor:pointer;transition:.2s}
+.quick-btn:hover{border-color:#d8b77d;background:#c7a66a18;transform:translateY(-2px)}
+.quick-btn:focus-visible{outline:2px solid #f0d39d;outline-offset:3px}
