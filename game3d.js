@@ -429,6 +429,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     const hit=raycaster.intersectObjects(pickables,false).find(h=>h.object.userData.troop);
     const clicked=hit?.object.userData.troop;
     if(clicked){
+      if(!battleStarted && clicked.userData.side!==activeSide)return;
       if(selectedUnit&&selectedUnit!==clicked&&selectedUnit.userData.side!==clicked.userData.side){
         selectedUnit.userData.target=clicked;selectedUnit.userData.destination=null;
         if(!battleStarted){selectTroop(clicked);return;}
