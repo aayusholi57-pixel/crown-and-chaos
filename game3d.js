@@ -252,24 +252,29 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
   // Restrained red sparks and dust: cinematic impact feedback without graphic gore.
   function siegeImpact(side, health, damage) {
     const castle = castles[side]; if (!castle) return;
-    const origin = castle.position.clone().add(new THREE.Vector3(side === "red" ? 1.1 : -1.1, 1.1, .85));
-    const particles = [], palette = [0x9e302f, 0xc65a45, 0xe2a36b, 0x6b5550];
-    for (let i = 0; i < Math.min(24, 9 + Math.round(damage / 2)); i++) {
-      const p = new THREE.Mesh(new THREE.SphereGeometry(.035 + Math.random() * .045, 6, 5), new THREE.MeshBasicMaterial({ color: palette[i % palette.length], transparent: true, opacity: .9 }));
-      p.position.copy(origin); p.userData.v = new THREE.Vector3((Math.random() - .5) * .12, .04 + Math.random() * .12, (Math.random() - .5) * .12); scene.add(p); particles.push(p);
+    const now = performance.now();
+    const showImpact = now - (castle.userData.lastImpact || 0) > 220;
+    if (showImpact) {
+      castle.userData.lastImpact = now;
+      const origin = castle.position.clone().add(new THREE.Vector3(side === "red" ? 1.1 : -1.1, 1.1, .85));
+      const particles = [], palette = [0x9e302f, 0xc65a45, 0xe2a36b, 0x6b5550];
+      for (let i = 0; i < 12; i++) {
+        const p = new THREE.Mesh(new THREE.SphereGeometry(.035 + Math.random() * .045, 6, 5), new THREE.MeshBasicMaterial({ color: palette[i % palette.length], transparent: true, opacity: .9 }));
+        p.position.copy(origin); p.userData.v = new THREE.Vector3((Math.random() - .5) * .12, .04 + Math.random() * .12, (Math.random() - .5) * .12); scene.add(p); particles.push(p);
+      }
+      const light = new THREE.PointLight(0xff6a45, 8, 5); light.position.copy(origin); scene.add(light);
+      const started = performance.now(), duration = 620;
+      const tick = () => {
+        const t = Math.min(1, (performance.now() - started) / duration);
+        particles.forEach(p => { p.position.add(p.userData.v); p.userData.v.y -= .003; p.material.opacity = .9 * (1 - t); p.scale.setScalar(1 - t * .55); });
+        light.intensity = 8 * (1 - t);
+        if (t < 1) requestAnimationFrame(tick); else { particles.forEach(p => { scene.remove(p); p.geometry.dispose(); p.material.dispose(); }); scene.remove(light); }
+      };
+      requestAnimationFrame(tick);
     }
-    const light = new THREE.PointLight(0xff6a45, 8, 5); light.position.copy(origin); scene.add(light);
-    const start = performance.now(), duration = 620;
-    const tick = () => {
-      const t = Math.min(1, (performance.now() - start) / duration);
-      particles.forEach(p => { p.position.add(p.userData.v); p.userData.v.y -= .003; p.material.opacity = .9 * (1 - t); p.scale.setScalar(1 - t * .55); });
-      light.intensity = 8 * (1 - t);
-      if (t < 1) requestAnimationFrame(tick); else { particles.forEach(p => { scene.remove(p); p.geometry.dispose(); p.material.dispose(); }); scene.remove(light); }
-    };
-    requestAnimationFrame(tick);
     castle.userData.damage = 100 - health;
     castle.children.forEach((part, i) => { if (part.material?.color && i % 2 === 0) { part.material.emissive = new THREE.Color(0x401b19); part.material.emissiveIntensity = (1 - health / 100) * .55; } });
-    castle.position.x += side === "red" ? -.025 : .025;
+    if (showImpact) castle.position.x += side === "red" ? -.025 : .025;
     if (health <= 0 && !castle.userData.fallen) {
       castle.userData.fallen = true; const y = castle.position.y, started = performance.now();
       const collapse = () => { const t = Math.min(1, (performance.now() - started) / 1150); castle.rotation.z = (side === "red" ? -1 : 1) * t * .62; castle.position.y = y - t * .7; if (t < 1) requestAnimationFrame(collapse); };
@@ -385,7 +390,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     const spear=new THREE.Mesh(troopGeometry.spear,troopMaterials.steel);spear.position.set(.2,.48,0);spear.rotation.z=-.12;group.add(spear);
     const cols=Math.ceil(Math.sqrt(count)),row=Math.floor(index/cols),col=index%cols;
     const direction=side==="red"?1:-1;
-    const startX=side==="red"?-5.9:-1.55;
+    const startX=side==="red"?-5.9:5.9;
     group.position.set(startX+direction*col*.38,0,(row-(Math.ceil(count/cols)-1)/2)*.38);
     group.rotation.y=side==="red"?Math.PI/2:-Math.PI/2;
     group.userData={side,kind,hp:3,selected:false,destination:null,target:null,attackAt:0,phase:index*.23,walking:false};
