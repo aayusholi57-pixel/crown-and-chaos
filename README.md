@@ -8,8 +8,8 @@ A browser-based **2D side-view kingdom battle**. The Crimson army starts on the 
 
 ## Battle flow
 
-1. Choose 10, 50, or 100 troops for the Crimson kingdom and deploy them on the left.
-2. Choose the Azure kingdom's army and deploy it on the right.
+1. Use **Quick Battle · 10 vs 10** to start an automatic match immediately, or choose **Enter the Battle** to customize each kingdom.
+2. In custom mode, choose 10, 50, or 100 troops and a troop class for each kingdom, then deploy them on their own side.
 3. Start the invasion. Both armies automatically march toward each other.
 4. Soldiers and knights engage at close range with animated weapon swings. Archers and mages support from behind with ranged projectiles.
 5. Units distribute their targets across the enemy line to reduce pile-ups.
@@ -41,7 +41,7 @@ Then visit http://localhost:8000.
 
 ## Controls
 
-During deployment, select a troop class and army size, then click **Deploy Army**. The two kingdoms deploy in separate territories. Once the Blue army is deployed, click **Begin the Invasion**. During battle, click a soldier to select it and click a destination to issue an order.
+Choose **Quick Battle** for an immediate 10-vs-10 automatic match. For custom games, deploy Red and Blue armies separately, then begin the invasion. Units move, select enemies, attack, and siege automatically. Clicking a unit and destination is optional manual control.
 
 ## Project structure
 
