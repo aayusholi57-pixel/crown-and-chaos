@@ -8,7 +8,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
   const scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x24252d, 0.026);
   const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-  camera.position.set(0, 8.8, 17.5);
+  camera.position.set(0, 6.4, 19.5);
   camera.lookAt(0, 1.2, 0);
 
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -434,7 +434,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     const cols=Math.ceil(Math.sqrt(count)),row=Math.floor(index/cols),col=index%cols;
     const direction=side==="red"?1:-1,startX=side==="red"?-5.9:5.9;
     group.position.set(startX+direction*col*.38,0,(row-(Math.ceil(count/cols)-1)/2)*.38);
-    group.rotation.y=side==="red"?Math.PI/2:-Math.PI/2;
+    group.rotation.y=side==="red"?0:Math.PI;
     const aura=new THREE.Mesh(new THREE.RingGeometry(.2,.25,20),new THREE.MeshBasicMaterial({color:side==="red"?0xff584a:0x64aaff,transparent:true,opacity:.35,side:THREE.DoubleSide}));
     aura.rotation.x=-Math.PI/2;aura.position.y=.065;group.add(aura);
     group.userData={side,kind,hp:kind==="knight"?6:kind==="soldier"?4:3,selected:false,destination:null,target:null,attackAt:0,attackStarted:-10,phase:index*.23,walking:false,baseMaterial:base.material,leftArm,rightArm,leftLeg,rightLeg,aura,weapon};
@@ -541,7 +541,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     const speed=d.kind==="knight"?2.15:d.kind==="archer"?1.65:1.4;
     const step=Math.min(distance,speed*delta);
     unit.position.x+=dx/distance*step;unit.position.z+=dz/distance*step;
-    unit.rotation.y=Math.atan2(dx,dz);
+    unit.rotation.y=Math.atan2(-dz,dx);
     unit.position.y=Math.abs(Math.sin(time*10+d.phase))*.035;
     d.walking=true;
   }
@@ -551,8 +551,8 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
     if (!w || !h) return;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
-    camera.position.z = w < 600 ? 21 : 17.5;
-    camera.position.y = w < 600 ? 10.5 : 8.8;
+    camera.position.z = w < 600 ? 22 : 19.5;
+    camera.position.y = w < 600 ? 8.5 : 6.4;
     camera.updateProjectionMatrix();
   }
   const clock = new THREE.Clock();
@@ -580,7 +580,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
       d.rightArm.rotation.z=(d.walking?walk*.22:0)+(attacking?1.35*swing:0);
       d.rightArm.rotation.x=attacking?-.15*swing:0;
       d.leftArm.rotation.x=d.selected?-.25:0;
-      d.aura.material.opacity=d.selected?.85:.28+Math.sin(t*2+d.phase)*.08;
+      d.aura.material.opacity=d.selected ? .85 : .28+Math.sin(t*2+d.phase)*.08;
       if(attacking)unit.rotation.z=-.06*swing;
       else unit.rotation.z=0;
       unit.position.y=d.walking?Math.abs(walk)*.035:0;
