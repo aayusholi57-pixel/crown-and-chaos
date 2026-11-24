@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111014">
+  <meta name="description" content="Two kingdoms. One battlefield. Draw your strategy and fight for the last throne in Crown & Chaos.">
+  <title>Crown & Chaos — The Last Throne</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Crown and Chaos home"><span class="brand-mark">♜</span><span>CROWN <i>&</i> CHAOS</span></a>
+    <div class="top-meta"><span class="live-dot"></span> THE LAST KINGDOMS <span class="divider">/</span> SEASON I</div>
+    <button class="sound-toggle" id="soundToggle" aria-label="Turn sound off">♫ <span>SOUND ON</span></button>
+  </header>
+  <main>
+    <section class="intro" id="intro">
+      <div class="eyebrow"><span></span> A KINGDOM WILL FALL <span></span></div>
+      <h1>THE LAST<br><em>THRONE</em></h1>
+      <p class="intro-copy">Two kings. One battlefield. A thousand ways to conquer.<br>Draw your army. Shape your fate. Take the crown.</p>
+      <button class="primary-btn" id="beginBtn"><span>ENTER THE BATTLE</span><b>↗</b></button>
+      <div class="intro-foot"><span>✦</span> NO DESTINY. ONLY STRATEGY. <span>✦</span></div>
+    </section>
+
+    <section class="game-shell hidden" id="gameShell" aria-label="Battle game">
+      <div class="game-heading">
+        <div><div class="eyebrow small">THE CONTEST FOR THE CROWN</div><h2>CHOOSE YOUR <em>FATE</em></h2></div>
+        <div class="round-chip">ROUND <b id="roundNumber">01</b></div>
+      </div>
+      <div class="scoreboard">
+        <div class="king-card red-card"><div class="king-symbol">♛</div><div><small>THE CRIMSON REALM</small><strong>RED KING</strong><span id="redStatus">Ready to command</span></div><div class="health"><i id="redHealth"></i></div></div>
+        <div class="versus">VS</div>
+        <div class="king-card blue-card"><div class="king-symbol">♚</div><div><small>THE AZURE REALM</small><strong>BLUE KING</strong><span id="blueStatus">Ready to command</span></div><div class="health"><i id="blueHealth"></i></div></div>
+      </div>
+      <div class="arena-wrap">
+        <div class="arena-top"><span>⚔ &nbsp; THE ASHEN PLAINS</span><span id="phaseLabel">RED COMMAND PHASE</span><span>☼ &nbsp; DAY <b id="dayNumber">01</b></span></div>
+        <div class="arena" id="arena">
+          <div class="mountains"></div><div class="sun"></div>
+          <div class="castle castle-red"><div class="flag">♛</div><div class="castle-body"></div></div>
+          <div class="castle castle-blue"><div class="flag">♚</div><div class="castle-body"></div></div>
+          <div class="battle-line"></div>
+          <canvas id="battleCanvas" aria-label="Draw your army's route on your half of the battlefield"></canvas>
+          <div class="arena-caption" id="arenaCaption">RED KING — DRAW ON THE LEFT SIDE</div>
+          <div class="combat-flash" id="combatFlash"></div>
+        </div>
+        <div class="arena-bottom"><span>DRAG TO DRAW A UNIT'S PATH</span><span>UP TO 3 COMMANDS PER KING</span></div>
+      </div>
+      <div class="command-panel">
+        <div class="turn-info"><span class="turn-dot red" id="turnDot"></span><div><small id="turnLabel">RED KING'S TURN</small><strong id="toolLabel">Choose your formation</strong></div></div>
+        <div class="tools" role="group" aria-label="Choose unit">
+          <button class="tool active" data-tool="soldier" aria-pressed="true"><span>⚔</span><small>SOLDIER</small></button>
+          <button class="tool" data-tool="archer" aria-pressed="false"><span>➶</span><small>ARCHER</small></button>
+          <button class="tool" data-tool="knight" aria-pressed="false"><span>♞</span><small>KNIGHT</small></button>
+          <button class="tool" data-tool="mage" aria-pressed="false"><span>✧</span><small>MAGE</small></button>
+        </div>
+        <div class="command-actions"><button class="text-btn" id="undoBtn">↶ UNDO</button><button class="primary-btn fight-btn" id="advanceBtn"><span>END RED TURN</span><b>↗</b></button></div>
+      </div>
+      <div class="game-footer"><button class="text-btn" id="resetBtn">↻ RESTART GAME</button><span>THE CROWN IS EARNED, NEVER GIVEN.</span><button class="text-btn" id="howBtn">HOW TO PLAY ?</button></div>
+    </section>
+  </main>
+
+  <div class="modal hidden" id="modal" role="dialog" aria-modal="true" aria-labelledby="manualTitle">
+    <div class="modal-card"><button class="close-modal" id="closeModal" aria-label="Close">×</button><div class="eyebrow small">FIELD MANUAL</div><h2 id="manualTitle">HOW TO <em>CONQUER</em></h2>
+      <ol><li><b>Red commands first:</b> choose a unit and draw a route on the left half.</li><li>Press <b>END RED TURN</b> and pass the device to Blue.</li><li>Blue draws up to three routes on the right half.</li><li>Press <b>UNLEASH BATTLE</b> to watch both armies clash.</li><li>Repeat rounds until one king's health reaches zero.</li></ol>
+      <p class="hint">Soldiers are balanced. Archers strike hard. Knights hit hardest. Mages deal devastating damage.</p><button class="primary-btn" id="gotIt"><span>UNDERSTOOD</span><b>↗</b></button>
+    </div>
+  </div>
+  <div class="result-overlay hidden" id="resultOverlay"><div class="result-card"><div class="eyebrow">THE DUST HAS SETTLED</div><div class="crown">♛</div><h2 id="resultTitle">VICTORY</h2><p id="resultText">The kingdom remembers your name.</p><button class="primary-btn" id="playAgain"><span>FIGHT AGAIN</span><b>↻</b></button></div></div>
+  <script src="game.js"></script>
+</body>
+</html>
