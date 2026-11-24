@@ -1,6 +1,6 @@
 # Crown & Chaos — The Last Throne
 
-A browser-based **2D side-view kingdom battle**. The Crimson army starts on the left, the Azure army on the right. When war begins, both armies march toward the centre, meet at the frontline, fight hand-to-hand, and the surviving army advances to destroy the enemy castle.
+A browser-based **2D autonomous kingdom warfare simulator**. The Crimson army starts on the left, the Azure army on the right. When war begins, both armies march toward the centre, meet at the frontline, fight hand-to-hand, and the surviving army advances to destroy the enemy castle.
 
 ## Play
 
@@ -16,7 +16,7 @@ A browser-based **2D side-view kingdom battle**. The Crimson army starts on the 
 6. When one army is defeated, the surviving army advances to the enemy castle and attacks it until its integrity reaches zero.
 7. The game announces the winner when the opposing stronghold falls.
 
-## Features
+## Tactical AI\n\n- Three selectable AI doctrines: Standard, Veteran, and Warlord\n- Autonomous commander states: engage and siege\n- Spatial-grid enemy acquisition and distributed target assignment\n- Staggered tactical decisions with fixed-step simulation for stable movement\n- AI status telemetry showing survivors, commander orders, and frame rate\n\n## Features
 
 - Pure HTML, CSS, and JavaScript; no framework, package installation, backend, API key, or build step required
 - Canvas-based 2D side-view battlefield
@@ -25,7 +25,7 @@ A browser-based **2D side-view kingdom battle**. The Crimson army starts on the 
 - Four troop classes: Soldier, Archer, Knight, and Mage
 - Visible heads, torsos, arms, hands, shields, weapons, and health bars
 - Animated marching, melee attacks, arrows, magic bolts, hit effects, and siege damage
-- Stable target selection and target-load balancing to keep the frontline distributed
+- Spatial-grid target acquisition and target-load balancing to keep the frontline distributed
 - Automatic post-battle march toward the enemy stronghold
 - Responsive interface and reduced-motion accessibility support
 
@@ -48,7 +48,7 @@ Choose **Quick Battle** for an immediate 10-vs-10 automatic match. For custom ga
 - `index.html` — game interface and overlays
 - `styles.css` — responsive styling
 - `game.js` — deployment turns, controls, sound, and victory UI
-- `game2d.js` — active 2D canvas renderer, troop AI, combat, projectiles, and castle siege
+- `game2d.js` — active 2D canvas renderer, commander AI, spatial targeting, fixed-step combat, projectiles, and castle siege
 - `game3d.js` — legacy prototype; not loaded by the game
 
 ## Deployment
