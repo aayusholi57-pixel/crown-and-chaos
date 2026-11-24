@@ -47,12 +47,31 @@
   function setActiveSide(side){state.active=side;state.selected=null;}
   function removeArmy(side){state.units=state.units.filter(u=>u.side!==side);state.selected=null;draw();}
   function resetArmies(){state.battle=false;state.units=[];state.projectiles=[];state.particles=[];state.selected=null;state.castle={red:100,blue:100};draw();}
-  function beginBattle(){state.battle=true;state.last=performance.now();if(!state.raf)state.raf=requestAnimationFrame(loop);}
+  function beginBattle(){
+    state.battle=true;
+    state.last=performance.now();
+    // Clear deployment orders: once the invasion starts, both armies commit
+    // to the frontline and then to the enemy stronghold.
+    for(const u of state.units){u.order=null;u.target=null;u.lastAttack=0;}
+    if(!state.raf)state.raf=requestAnimationFrame(loop);
+  }
   function distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
   function nearestEnemy(u){
-    let best=null,bd=Infinity;
-    for(const e of state.units){if(e.dead||e.side===u.side)continue;const d=distance(u,e);if(d<bd){best=e;bd=d;}}
-    return {unit:best,d:bd};
+    // Keep a soldier's target stable and distribute the frontline instead of
+    // sending the whole army into one crowded pile.
+    if(u.target && !u.target.dead && u.target.side!==u.side){
+      return {unit:u.target,d:distance(u,u.target)};
+    }
+    let best=null,bestScore=Infinity,bestDistance=Infinity;
+    for(const e of state.units){
+      if(e.dead||e.side===u.side)continue;
+      let load=0;
+      for(const ally of state.units)if(!ally.dead&&ally.side===u.side&&ally.target===e)load++;
+      const d=distance(u,e);
+      const score=d+Math.max(0,load-1)*82+Math.abs(u.y-e.y)*.12;
+      if(score<bestScore){best=e;bestScore=score;bestDistance=d;}
+    }
+    return {unit:best,d:bestDistance};
   }
   function moveToward(u,x,y,dt,speed=u.speed){
     const dx=x-u.x,dy=y-u.y,d=Math.hypot(dx,dy);
@@ -76,11 +95,16 @@
       u.attack=Math.max(0,u.attack-dt*3.5);u.hit=Math.max(0,u.hit-dt);
       const {unit:enemy,d}=nearestEnemy(u);
       if(enemy){
-        u.target=enemy;u.facing=enemy.x>=u.x?1:-1;
-        if(d>u.range){
-          // Every troop actively closes the gap; ranged troops stop at their firing distance.
-          const standOff=u.kind==="soldier"||u.kind==="knight"?u.range*.62:u.range*.78;
-          moveToward(u,enemy.x-u.facing*standOff,enemy.y,dt,u.speed);
+        u.target=enemy;
+        u.facing=enemy.x>=u.x?1:-1;
+        const ranged=u.kind==="archer"||u.kind==="mage";
+        const standOff=ranged?u.range*.72:u.range*.72;
+        const contactDistance=ranged?standOff:u.range*.72;
+        if(d>contactDistance){
+          // March directly toward the opposing line; ranged troops hold behind it.
+          const tx=enemy.x-u.facing*contactDistance;
+          const ty=clamp(enemy.y+(u.y-enemy.y)*.12,ground-145,ground-8);
+          moveToward(u,tx,ty,dt,u.speed);
         }else{
           attack(u,enemy,now);
         }
@@ -175,7 +199,13 @@
     for(const p of state.projectiles){ctx.fillStyle=p.kind==="mage"?"#c6a0ff":"#f3d6a0";ctx.beginPath();ctx.arc(p.x,p.y,p.kind==="mage"?6:3,0,Math.PI*2);ctx.fill();ctx.strokeStyle=ctx.fillStyle;ctx.globalAlpha=.5;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-(p.side==="red"?17:-17),p.y+4);ctx.stroke();ctx.globalAlpha=1;}
     for(const p of state.particles){ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
   }
-  function loop(now){const dt=Math.min(.04,(now-state.last)/1000||0);state.last=now;if(state.battle)update(dt,now);draw();state.raf=requestAnimationFrame(loop);}
+  function loop(now){
+    const dt=Math.min(.04,(now-state.last)/1000||0);
+    state.last=now;
+    if(state.battle)update(dt,now);
+    draw();
+    state.raf=requestAnimationFrame(loop);
+  }
   function pointer(e){
     const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
     if(state.battle){
@@ -189,6 +219,7 @@
     else if(state.selected){state.selected.order={x:clamp(x,state.active==="red"?35:605,state.active==="red"?595:1165),y:clamp(y,ground-150,ground-5)};state.selected=null;}
   }
   canvas.addEventListener("pointerdown",pointer);
+  if(!state.raf){state.last=performance.now();state.raf=requestAnimationFrame(loop);}
   window.Crown2D={deployArmy,setActiveSide,beginBattle,removeArmy,resetArmies};
   // Keep the old controller interface intact while replacing its 3D renderer.
   window.Crown3D=window.Crown2D;
