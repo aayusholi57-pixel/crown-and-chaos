@@ -54,20 +54,23 @@
     if(!state.raf)state.raf=requestAnimationFrame(loop);
   }
   function distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
-  function nearestEnemy(u){
-    // Keep a soldier's target stable and distribute the frontline instead of
-    // sending the whole army into one crowded pile.
+  function nearestEnemy(u,targetLoads){
+    // Keep targets stable, but distribute fresh attackers across the enemy line.
     if(u.target && !u.target.dead && u.target.side!==u.side){
       return {unit:u.target,d:distance(u,u.target)};
     }
     let best=null,bestScore=Infinity,bestDistance=Infinity;
-    for(const e of state.units){
-      if(e.dead||e.side===u.side)continue;
-      let load=0;
-      for(const ally of state.units)if(!ally.dead&&ally.side===u.side&&ally.target===e)load++;
-      const d=distance(u,e);
-      const score=d+Math.max(0,load-1)*82+Math.abs(u.y-e.y)*.12;
-      if(score<bestScore){best=e;bestScore=score;bestDistance=d;}
+    for(const enemy of state.units){
+      if(enemy.dead||enemy.side===u.side)continue;
+      const load=targetLoads.get(enemy)||0;
+      const d=distance(u,enemy);
+      const score=d+load*82+Math.abs(u.y-enemy.y)*.12;
+      if(score<bestScore){best=enemy;bestScore=score;bestDistance=d;}
+    }
+    if(best){
+      const load=targetLoads.get(best)||0;
+      targetLoads.set(best,load+1);
+      u.targetLane=((load%5)-2)*13;
     }
     return {unit:best,d:bestDistance};
   }
@@ -94,9 +97,11 @@
   function burst(x,y,color,n=8){for(let i=0;i<n;i++)state.particles.push({x,y,vx:rand(-65,65),vy:rand(-90,15),life:rand(.2,.55),max:.55,color});}
   function update(dt,now){
     const alive=state.units.filter(u=>!u.dead);
+    const targetLoads=new Map();
+    for(const ally of alive)if(ally.target&&!ally.target.dead)targetLoads.set(ally.target,(targetLoads.get(ally.target)||0)+1);
     for(const u of alive){
       u.attack=Math.max(0,u.attack-dt*3.5);u.hit=Math.max(0,u.hit-dt);
-      const {unit:enemy,d}=nearestEnemy(u);
+      const {unit:enemy,d}=nearestEnemy(u,targetLoads);
       if(enemy){
         u.target=enemy;
         u.facing=enemy.x>=u.x?1:-1;
@@ -106,7 +111,7 @@
         if(d>contactDistance){
           // March directly toward the opposing line; ranged troops hold behind it.
           const tx=enemy.x-u.facing*contactDistance;
-          const ty=clamp(enemy.y+(u.y-enemy.y)*.12,ground-145,ground-8);
+          const ty=clamp(enemy.y+(u.targetLane||0),ground-145,ground-8);
           moveToward(u,tx,ty,dt,u.speed);
         }else{
           attack(u,enemy,now);
